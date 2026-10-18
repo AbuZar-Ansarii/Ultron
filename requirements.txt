@@ -1,0 +1,122 @@
+# ── ULTRON AI (Mark LV Evolution) — Python dependencies ──────────────────────
+# pip skips any line whose sys_platform marker does not match your OS, so this
+# one file serves Windows, macOS and Linux. `python setup.py` runs it for you.
+
+# Version bounds: the lower bound is what the app is developed against, the
+# upper bound stops the next MAJOR release of a dependency from breaking every
+# fresh clone on the day it ships. Minor and patch updates flow in freely.
+
+# ── Core: UI, audio, Gemini Live ──────────────────────────────────────────────
+# PyQt6 and numpy also carry the holographic avatar: the head is rendered in
+# software with QPainter and posed with numpy, so the face costs no extra
+# package, no OpenGL and no GPU. Nothing below was added for it.
+PyQt6>=6.6,<7
+sounddevice>=0.4,<1
+numpy>=1.24,<3
+google-genai>=2.8.0,<3
+
+# ── Ultron Speech & Voice Synthesis (TTS & STT) ──────────────────────────────
+edge-tts>=6.1.0              # Neural voice engine (Ultron, Titan, Marcus, etc.)
+miniaudio>=1.59              # Low-latency streaming MP3 decoder for EdgeTTS
+pyttsx3>=2.90                # SAPI5 offline speech fallback engine
+SpeechRecognition>=3.10.0    # STT input audio processing
+
+# ── Web search & browser control ──────────────────────────────────────────────
+requests>=2.31,<3
+beautifulsoup4>=4.12,<5
+playwright>=1.40,<2
+
+# ── Video on the HUD ──────────────────────────────────────────────────────────
+# Qt plays local files and direct media URLs on its own — QtMultimedia comes
+# with PyQt6, so the player itself costs nothing. A YouTube page is not a video
+# file, though, and yt-dlp is what turns one into a stream Qt can play. Without
+# it the HUD still plays files and URLs, and YouTube links open in the browser
+# with an explanation instead of failing.
+#
+# Deliberately UNBOUNDED, unlike everything else here. YouTube changes what it
+# serves without notice and yt-dlp answers with a release; an upper bound would
+# eventually pin a fresh clone to a version YouTube has already broken, which is
+# the opposite of what bounds are for. Keep it current: pip install -U yt-dlp
+yt-dlp
+
+# ── Automation / input control ────────────────────────────────────────────────
+pyautogui
+pyperclip
+
+# ── Vision & media ────────────────────────────────────────────────────────────
+pillow>=10,<13
+opencv-python>=4.8,<5
+mss>=9,<11
+
+# ── System, files & documents ─────────────────────────────────────────────────
+psutil>=5.9,<8
+send2trash                   # file_controller — recoverable deletes
+python-pptx                  # file_processor — presentation reading
+
+# ── Remote dashboard (control from your phone) ────────────────────────────────
+fastapi>=0.110,<1
+uvicorn[standard]>=0.27,<1
+cryptography>=42,<50
+python-multipart>=0.0.9,<1
+qrcode[pil]>=7,<9
+
+# ── Plugin extras ─────────────────────────────────────────────────────────────
+# Plugins are downloaded one file at a time from the community, so their
+# dependencies are installed UP FRONT: dropping a .py into plugins/ should make
+# it work on the next launch, not send you back to pip. Every one of these is
+# imported inside a try/except at the point of use, so an uninstalled extra
+# disables exactly one plugin and never touches the rest of the app.
+google-api-python-client     # gmail_control, calendar_control — OAuth
+google-auth-oauthlib         # gmail_control, calendar_control — OAuth
+tinytuya                     # home_assistant — Tuya / Smart Life bulbs
+paho-mqtt                    # printer_control — MQTT printers
+openpyxl                     # excel_writer — spreadsheet output
+youtube-transcript-api       # youtube_video — transcript fetch for summaries
+pygetwindow                  # game_updater, chat_takeover — window geometry
+bleak>=0.21.0                # airspace_sentinel — Bluetooth LE RF recon
+dnspython>=2.4.0             # network_auditor — multi-resolver DNS health audit
+
+# ── Windows-only (pip skips these automatically on macOS / Linux) ─────────────
+comtypes;   sys_platform == "win32"
+pycaw;      sys_platform == "win32"
+win10toast; sys_platform == "win32"
+pywin32;    sys_platform == "win32"
+wmi;        sys_platform == "win32"
+# pywinauto drives the Windows accessibility tree. Three plugins read it:
+# screen_agent (to aim without a model call), the WhatsApp pair, and
+# game_updater (Steam's install dialog).
+pywinauto;  sys_platform == "win32"
+
+# ── Documents, media & hardware readouts ──────────────────────────────────────
+# Also try/except-guarded at the point of use. They are declared because a
+# feature that silently does nothing is worse than a slightly longer install.
+ddgs>=9,<10                  # web_search — the maintained successor to
+                             # duckduckgo-search, which is tried first and
+                             # falls back to the old name automatically
+pdfplumber                   # file_processor — PDF text and tables
+PyPDF2                       # file_processor — PDF fallback reader
+python-docx                  # file_processor — .docx reading
+pynvml                       # system_monitor + the HUD's GPU meter (NVIDIA)
+
+# ── Optional: heavy extras, install only if you want the feature ──────────────
+# Left out on purpose — together they are several hundred megabytes, which is a
+# lot to download for a fresh clone that may never use them.
+#
+#   pip install pandas          # file_processor: spreadsheet/CSV analysis
+#   pip install pydub           # file_processor: audio metadata and conversion
+#   pip install faster-whisper  # local offline speech-to-text (Whisper)
+#   pip install kokoro          # local offline neural TTS engine
+#   pip install mediapipe       # pushup_counter: elbow-angle rep detection
+#
+# External System Tools (Auto-detected on PATH or standard paths):
+#   - adb & fastboot            # Android Bridge & ROM flashing (C:\platform-tools\)
+#   - scrcpy                    # Zero-latency phone screen mirroring (C:\scrcpy-win64-v4.0\)
+
+# ── Optional: local wake word ("Hey Jarvis") ──────────────────────────────────
+# Deliberately NOT installed by default — it's opt-in. Enable it (and download
+# the tiny model) with one click from ⚙ → WAKE WORD in the app, or install it
+# yourself with:  pip install openwakeword
+#
+# macOS / Linux OS actions (volume, brightness, reminders) shell out to native
+# tools (pactl / brightnessctl / osascript / systemd), so no extra Python
+# packages are needed there — nothing Windows-specific is ever pulled in.

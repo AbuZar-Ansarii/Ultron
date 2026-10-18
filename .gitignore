@@ -1,0 +1,44 @@
+# ── Secrets & Credentials ──────────────────────────────────────────
+config/api_keys.json
+config/certs/
+config/whatsapp_web/
+**/token*.json
+**/client_secret*.json
+*credentials*.json
+.env
+.env.*
+
+# ── Personal Data & Storage ────────────────────────────────────────
+memory/long_term.json
+memory/*.db
+memory/drone_reports/
+
+# ── Python Build & Cache ───────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ── Virtual Environments ───────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+
+# ── IDEs & System Files ────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Runtime Logs & Downloads ───────────────────────────────────────
+*.log
+logs/
+downloads/
+screenshots/

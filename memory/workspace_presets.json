@@ -1,0 +1,190 @@
+{
+  "coding": {
+    "name": "coding",
+    "title": "NEURAL CODING SANCTUARY",
+    "aliases": [
+      "coding",
+      "code",
+      "coder",
+      "developer",
+      "dev",
+      "program",
+      "programming",
+      "scripting",
+      "development",
+      "build",
+      "aaj coding ka man hai",
+      "coding ka man",
+      "code karne ka man",
+      "code karne ka mood",
+      "coding setup"
+    ],
+    "apps": [
+      "vscode",
+      "terminal"
+    ],
+    "urls": [
+      "https://github.com"
+    ],
+    "open_project_path": true,
+    "volume": 35,
+    "brightness": 80,
+    "music": "lofi hip hop radio - beats to relax/study to",
+    "dnd": true,
+    "iot_scene": "focus",
+    "description": "Full developer workspace with code editor, project terminal, GitHub portal, and ambient focus stream."
+  },
+  "gaming": {
+    "name": "gaming",
+    "title": "TACTICAL GAMING OVERDRIVE",
+    "aliases": [
+      "gaming",
+      "game",
+      "games",
+      "play",
+      "gamer",
+      "stream",
+      "gaming mode",
+      "gaming setup",
+      "game khelne ka man",
+      "aaj gaming ka man hai",
+      "game khelte hain"
+    ],
+    "apps": [
+      "steam",
+      "discord"
+    ],
+    "urls": [],
+    "open_project_path": false,
+    "volume": 70,
+    "brightness": 95,
+    "music": null,
+    "dnd": false,
+    "iot_scene": "gaming",
+    "description": "High-performance gaming setup with Discord comms, Steam client, and combat lighting."
+  },
+  "research": {
+    "name": "research",
+    "title": "ACADEMIC & RESEARCH SANCTUARY",
+    "aliases": [
+      "research",
+      "study",
+      "studying",
+      "padhai",
+      "learn",
+      "reading",
+      "academic",
+      "padhne ka man",
+      "aaj padhai ka man hai",
+      "study mode",
+      "aaj padhne ka man hai"
+    ],
+    "apps": [
+      "notion",
+      "browser"
+    ],
+    "urls": [
+      "https://scholar.google.com",
+      "https://arxiv.org"
+    ],
+    "open_project_path": false,
+    "volume": 25,
+    "brightness": 75,
+    "music": "deep focus ambient study music brainwave",
+    "dnd": true,
+    "iot_scene": "study",
+    "description": "Deep study sanctuary with academic archives, digital notebook, and calm acoustics."
+  },
+  "cyber_audit": {
+    "name": "cyber_audit",
+    "title": "CYBER RECON & INFRASTRUCTURE AUDIT",
+    "aliases": [
+      "cyber",
+      "audit",
+      "recon",
+      "security",
+      "pentest",
+      "hacker",
+      "network_audit",
+      "cyber audit",
+      "security audit",
+      "recon mode",
+      "security audit mode"
+    ],
+    "apps": [
+      "terminal"
+    ],
+    "urls": [],
+    "open_project_path": false,
+    "volume": 40,
+    "brightness": 85,
+    "music": "cyberpunk synthwave dark electro radio",
+    "dnd": true,
+    "iot_scene": "lockdown",
+    "run_audit": true,
+    "description": "Cyber defense operations center with network auditing, terminal telemetry, and security surveillance."
+  },
+  "chill": {
+    "name": "chill",
+    "title": "CINEMATIC RELAXATION LOUNGE",
+    "aliases": [
+      "chill",
+      "cinema",
+      "movie",
+      "movies",
+      "relax",
+      "relaxing",
+      "media",
+      "entertainment",
+      "aaram",
+      "chill mode",
+      "movie dekhni hai",
+      "aaram karne ka man hai"
+    ],
+    "apps": [
+      "netflix",
+      "vlc"
+    ],
+    "urls": [
+      "https://www.youtube.com"
+    ],
+    "open_project_path": false,
+    "volume": 55,
+    "brightness": 45,
+    "music": null,
+    "dnd": true,
+    "iot_scene": "cinema",
+    "description": "Cinematic relaxation lounge with streaming portals, dimmed displays, and immersive audio."
+  },
+  "creator": {
+    "name": "creator",
+    "title": "DIGITAL CONTENT & CREATIVE STUDIO",
+    "aliases": [
+      "creator",
+      "create",
+      "editing",
+      "video_editing",
+      "production",
+      "youtube",
+      "render",
+      "editing mode",
+      "video editing setup",
+      "content creation"
+    ],
+    "apps": [
+      "capcut",
+      "blender",
+      "obsidian"
+    ],
+    "urls": [
+      "https://studio.youtube.com"
+    ],
+    "open_project_path": false,
+    "volume": 50,
+    "brightness": 90,
+    "music": null,
+    "dnd": true,
+    "iot_scene": "studio",
+    "description": "Digital studio setup with creative suites, asset directories, and balanced monitor acoustics."
+  }
+}
