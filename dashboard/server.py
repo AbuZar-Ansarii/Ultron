@@ -537,7 +537,14 @@ class DashboardServer:
             try:
                 await ws.send_json(msg)
             except Exception:
-                dead.add(ws)
+                try:
+                    if hasattr(ws, "client_state") and ws.client_state.name == "DISCONNECTED":
+                        dead.add(ws)
+                except Exception:
+                    dead.add(ws)
+        if dead:
+            self._clients -= dead
+
     async def broadcast_audio(self, pcm_bytes: bytes, sample_rate: int = 24000) -> None:
         """Stream raw PCM speech audio chunks directly to connected phone dashboards."""
         if not self._clients or not pcm_bytes:
@@ -549,8 +556,13 @@ class DashboardServer:
             try:
                 await ws.send_json(msg)
             except Exception:
-                dead.add(ws)
-        self._clients -= dead
+                try:
+                    if hasattr(ws, "client_state") and ws.client_state.name == "DISCONNECTED":
+                        dead.add(ws)
+                except Exception:
+                    dead.add(ws)
+        if dead:
+            self._clients -= dead
 
     # ── FastAPI app ───────────────────────────────────────────────────────
 
