@@ -47,6 +47,7 @@ pyperclip
 pillow>=10,<13
 opencv-python>=4.8,<5
 mss>=9,<11
+pytesseract                  # optical_hud — local optical character recognition (OCR)
 
 # ── System, files & documents ─────────────────────────────────────────────────
 psutil>=5.9,<8
