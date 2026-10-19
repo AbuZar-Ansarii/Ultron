@@ -784,21 +784,23 @@ class JarvisLive:
                     self.ui.set_active_task(fn_name, details=str(fn_args))
                     try:
                         tool_res = self._execute_tool_sync(fn_name, fn_args)
+                        self.ui.set_active_task(fn_name, label="TELEGRAM // SYNTHESIZING REPORT", details=str(fn_args))
+                        followup = llm_client.call_unified(
+                            prompt_or_messages=(
+                                f"Remote directive from Boss via Telegram: {text}\n"
+                                f"Tool '{fn_name}' execution result: {tool_res}\n\n"
+                                f"Report the outcome directly to the Boss in character as Ultron (James Spader MCU persona). "
+                                f"Be concise, chillingly confident, and authoritative. Match the language of the command (English or Hindi)."
+                            ),
+                            system=sys_prompt,
+                            provider=provider,
+                            model=model,
+                            timeout=30,
+                        )
+                        reply = followup.get("content", reply or str(tool_res))
                     finally:
-                        self.ui.clear_active_task()
-                    followup = llm_client.call_unified(
-                        prompt_or_messages=(
-                            f"Remote directive from Boss via Telegram: {text}\n"
-                            f"Tool '{fn_name}' execution result: {tool_res}\n\n"
-                            f"Report the outcome directly to the Boss in character as Ultron (James Spader MCU persona). "
-                            f"Be concise, chillingly confident, and authoritative. Match the language of the command (English or Hindi)."
-                        ),
-                        system=sys_prompt,
-                        provider=provider,
-                        model=model,
-                        timeout=30,
-                    )
-                    reply = followup.get("content", reply or str(tool_res))
+                        self.ui.clear_active_task(success=True)
+
 
             final_reply = reply or "Directive executed into the system matrix, Boss."
             self.ui.write_log(f"Ultron (Telegram): {final_reply[:60]}...")
@@ -1139,6 +1141,7 @@ class JarvisLive:
         model = get_ai_model() or "gemma4:31b-cloud"
 
         self.ui.set_state("THINKING")
+        self.ui.set_active_task("neural_cognition", label="NEURAL COGNITION // ANALYZING DIRECTIVE")
         self.ui.write_log(f"User: {text}")
         if self._dashboard:
             try:
@@ -1197,7 +1200,9 @@ class JarvisLive:
                             }))
                         except Exception:
                             pass
-                    self.set_speaking(True)
+                    # Spin up tool task animation immediately so HUD displays active work
+                    self.ui.set_active_task(first_fn, details=str(first_args))
+                    self.set_speaking(True, keep_task=True)
                     try:
                         from core.tts import create_tts_player
                         player = create_tts_player({"tts_engine": "edgetts"})
@@ -1228,14 +1233,13 @@ class JarvisLive:
                             pass
                     print(f"[Ultron] Executing tool: '{fn_name}' with args: {fn_args}")
                     self.ui.set_active_task(fn_name, details=str(fn_args))
-                    try:
-                        tool_res = await loop.run_in_executor(
-                            None,
-                            lambda: self._execute_tool_sync(fn_name, fn_args)
-                        )
-                    finally:
-                        self.ui.clear_active_task()
+                    tool_res = await loop.run_in_executor(
+                        None,
+                        lambda: self._execute_tool_sync(fn_name, fn_args)
+                    )
                     print(f"[Ultron] Tool '{fn_name}' output: {str(tool_res)[:100]}")
+                    # Keep HUD animation active! Update label during follow-up synthesis
+                    self.ui.set_active_task(fn_name, label="NEURAL SYNTHESIS // COMPILING DIRECTIVE REPORT", details=str(fn_args))
                     followup = await loop.run_in_executor(
                         None,
                         lambda: llm_client.call_unified(
@@ -1267,6 +1271,8 @@ class JarvisLive:
                         }))
                     except Exception:
                         pass
+                # Trigger completion burst shockwave right when final speech starts!
+                self.ui.clear_active_task(success=True)
                 self.set_speaking(True)
                 try:
                     from core.tts import create_tts_player
@@ -1278,6 +1284,7 @@ class JarvisLive:
                     self.set_speaking(False)
                     self.ui.set_state("ONLINE")
             else:
+                self.ui.clear_active_task(success=False)
                 self.set_speaking(False)
                 self.ui.set_state("ONLINE")
 
@@ -1292,8 +1299,10 @@ class JarvisLive:
                     }))
                 except Exception:
                     pass
+            self.ui.clear_active_task(success=False)
             self.set_speaking(False)
             self.ui.set_state("ONLINE")
+
 
     async def _unified_audio_stt_worker(self):
         """Processes microphone audio in Unified mode using SpeechRecognition and adaptive VAD."""
@@ -1597,7 +1606,7 @@ class JarvisLive:
         """True while the speakers may still be finishing our last sentence."""
         return time.monotonic() < self._tail_until
 
-    def set_speaking(self, value: bool):
+    def set_speaking(self, value: bool, keep_task: bool = False):
         with self._speaking_lock:
             self._is_speaking = value
         if value:
@@ -1615,8 +1624,11 @@ class JarvisLive:
             self._out_level = 0.0
         if value:
             self.ui.set_state("SPEAKING")
+            if not keep_task:
+                self.ui.clear_active_task(success=True)
         elif not self.ui.muted:
             self.ui.set_state("ONLINE" if self.session is None else "LISTENING")
+
 
     def set_push_to_talk(self, enabled: bool) -> str:
         """Turn hold-to-talk on or off. Returns the scope actually achieved."""
@@ -1974,9 +1986,14 @@ class JarvisLive:
             traceback.print_exc()
             self.speak_error(name, e)
 
-        self.ui.clear_active_task(success=not str(result).startswith("Tool '"))
+        # In Gemini Live mode, retain active task animation until live speech starts!
+        if not str(result).startswith("Tool '"):
+            self.ui.set_active_task(name, label=f"SYNTHESIS // STREAMING {name.upper()}", details=str(args))
+        else:
+            self.ui.clear_active_task(success=False)
         if not self.ui.muted:
             self.ui.set_state("LISTENING")
+
 
         print(f"[JARVIS] 📤 {name} → {str(result)[:80]}")
 

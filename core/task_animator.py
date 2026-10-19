@@ -132,6 +132,37 @@ class TaskAnimator:
                 "speed": random.uniform(0.6, 1.3),
             })
 
+        # Initialize Neural Cognition / Quantum Synapse state pools
+        self._neural_nodes: list[dict] = []
+        self._synapse_pulses: list[dict] = []
+        self._quantum_bits: list[dict] = []
+        for i in range(12):
+            self._neural_nodes.append({
+                "angle": (i / 12.0) * math.pi * 2,
+                "r_mult": random.uniform(1.24, 1.38),
+                "phase": random.uniform(0, math.pi * 2),
+                "speed": random.uniform(0.3, 0.7),
+                "label": f"N-{i+1:02d}",
+                "charge": random.uniform(0.4, 1.0),
+            })
+        for _ in range(10):
+            self._synapse_pulses.append({
+                "from_node": random.randint(0, 11),
+                "to_node": random.randint(0, 11),
+                "progress": random.uniform(0.0, 1.0),
+                "speed": random.uniform(0.8, 1.6),
+                "color": random.choice(["cyan", "crimson", "gold"]),
+            })
+        hex_chars = ["0xFA", "0x89", "0x1C", "0xD4", "0x3E", "0xB7", "0x09", "0xEF", "0x6A", "0x2B"]
+        for _ in range(16):
+            self._quantum_bits.append({
+                "x": random.uniform(-0.95, 0.95),
+                "y": random.uniform(-0.95, 0.95),
+                "val": random.choice(hex_chars),
+                "speed": random.uniform(0.12, 0.32),
+            })
+
+
     # ── Category & Label Resolution ──────────────────────────────────────────
 
     def categorize(self, task_name: str, details: str = "") -> str:
@@ -156,6 +187,8 @@ class TaskAnimator:
                 return "CODE"
             return "WORKSPACE"
 
+        if any(k in clean for k in ("cognition", "think", "neural", "reason", "synthes", "plan", "analyze", "directive", "intent")):
+            return "COGNITION"
         if any(k in clean for k in ("search", "google", "autopilot", "price_hunter", "research", "browser", "hunter", "bounty", "network", "scanner", "wifi", "lan", "radar", "ping", "optical", "vision")):
             return "SEARCH"
         if any(k in clean for k in ("purge", "clean", "disk", "trash", "cache", "recycle_bin")):
@@ -195,6 +228,9 @@ class TaskAnimator:
         elif self.category == "GHOST":
             self._ghost_trail.clear()
             self._ghost_ripples.clear()
+        elif self.category == "COGNITION":
+            for n in self._neural_nodes:
+                n["charge"] = random.uniform(0.6, 1.0)
 
     def clear_task(self, success: bool = True) -> None:
         """Deactivate task with optional completion flourish."""
@@ -223,6 +259,7 @@ class TaskAnimator:
             return "WORKSPACE MATRIX // ORCHESTRATING ENVIRONMENT"
 
         labels = {
+            "COGNITION": "NEURAL COGNITION // QUANTUM SYNAPSE OVERCLOCK",
             "SEARCH": "HUNTING THE NET // RECON RADAR ACTIVE",
             "PURGE": "DEEP PURGE // INCINERATING CORRUPT ROT",
             "GHOST": "GHOST PILOT // NEURAL SCREEN OVERRIDE",
@@ -235,6 +272,7 @@ class TaskAnimator:
             "GENERIC": f"EXECUTING DIRECTIVE // {task_name.upper()}",
         }
         return labels.get(category, f"EXECUTING // {task_name.upper()}")
+
 
     def _spawn_blip(self) -> None:
         ang = random.uniform(0, math.pi * 2)
@@ -366,6 +404,23 @@ class TaskAnimator:
                 pulse["progress"] = 0.0
                 pulse["path_idx"] = random.randint(0, 4)
 
+        # 9. COGNITION: synaptic nodes & pulses & quantum hex drift
+        for n in self._neural_nodes:
+            n["angle"] = (n["angle"] + dt * n["speed"] * 0.18) % (math.pi * 2)
+            n["charge"] = 0.5 + 0.5 * math.sin(self.t * 3.8 + n["phase"])
+        for sp in self._synapse_pulses:
+            sp["progress"] += dt * sp["speed"]
+            if sp["progress"] >= 1.0:
+                sp["progress"] = 0.0
+                sp["from_node"] = random.randint(0, len(self._neural_nodes) - 1)
+                sp["to_node"] = (sp["from_node"] + random.choice([3, 4, 5, 7, 8])) % len(self._neural_nodes)
+                sp["color"] = random.choice(["cyan", "crimson", "gold"])
+        for qb in self._quantum_bits:
+            qb["y"] -= dt * qb["speed"]
+            if qb["y"] < -1.05:
+                qb["y"] = 1.05
+                qb["x"] = random.uniform(-0.95, 0.95)
+
     def get_eye_offsets(self) -> tuple[float, float, float]:
         """Returns (gaze_dx, gaze_dy, eye_shutter) suggested for Ultron's face."""
         if self.category == "GHOST":
@@ -380,6 +435,10 @@ class TaskAnimator:
             return (0.0, self._purge_laser_y * 0.28, 0.68)
         elif self.category == "CODE" or self.category == "WORKSPACE":
             return (0.12 * math.sin(self.t * 1.8), 0.08 * math.cos(self.t * 2.2), 0.88)
+        elif self.category == "COGNITION":
+            gx = 0.08 * math.sin(self.t * 2.8)
+            gy = -0.06 + 0.04 * math.cos(self.t * 2.2)
+            return (gx, gy, 0.78)
         return (0.0, 0.0, 0.90)
 
     # ── Master Paint Dispatcher ──────────────────────────────────────────────
@@ -403,7 +462,9 @@ class TaskAnimator:
 
         # 3. Draw specific category visualization
         cat = self.category
-        if cat == "SEARCH":
+        if cat == "COGNITION":
+            self._paint_cognition(p, cx, cy, r, master_alpha)
+        elif cat == "SEARCH":
             self._paint_search(p, cx, cy, r, master_alpha)
         elif cat == "PURGE":
             self._paint_purge(p, cx, cy, r, master_alpha)
@@ -423,6 +484,7 @@ class TaskAnimator:
             self._paint_workspace(p, cx, cy, r, w, h, master_alpha)
         elif cat == "GENERIC":
             self._paint_generic(p, cx, cy, r, master_alpha)
+
 
         # 4. Draw Stark/Ultron Chamfered HUD Task Telemetry Banner
         self._paint_task_banner(p, cx, cy, r, w, master_alpha)
@@ -615,15 +677,162 @@ class TaskAnimator:
         except Exception:
             pass
 
+    # ── Category 0: COGNITION / SYNAPSE (Quantum Neural Processor) ────────────
+
+    def _paint_cognition(self, p: QPainter, cx: float, cy: float, r: float, alpha: float) -> None:
+        """Render high-tech neural synaptic network and quantum cognitive processor."""
+        try:
+            col_crimson = QColor(255, 35, 45, int(230 * alpha))
+            col_cyan = QColor(0, 240, 255, int(220 * alpha))
+            col_gold = QColor(255, 205, 50, int(200 * alpha))
+            col_dim_cyan = QColor(0, 180, 230, int(60 * alpha))
+
+            # 1. Tri-axial 3D Tilted Gyroscope Ellipses (Perspective Rings)
+            p.save()
+            p.setBrush(Qt.BrushStyle.NoBrush)
+
+            # Ring A: Tilted +28 deg, rotating
+            p.save()
+            p.translate(cx, cy)
+            p.rotate(28.0)
+            p.setPen(QPen(col_dim_cyan, 1.2, Qt.PenStyle.DashLine))
+            p.drawEllipse(QRectF(-r * 1.38, -r * 0.72, r * 2.76, r * 1.44))
+            p_ang_a = (self.t * 1.4) % (math.pi * 2)
+            bx_a = math.cos(p_ang_a) * (r * 1.38)
+            by_a = math.sin(p_ang_a) * (r * 0.72)
+            p.setBrush(QBrush(col_cyan))
+            p.setPen(Qt.PenStyle.NoPen)
+            p.drawEllipse(QPointF(bx_a, by_a), 2.8, 2.8)
+            p.restore()
+
+            # Ring B: Tilted -28 deg, counter-rotating
+            p.save()
+            p.translate(cx, cy)
+            p.rotate(-28.0)
+            p.setPen(QPen(QColor(255, 60, 50, int(70 * alpha)), 1.2, Qt.PenStyle.DotLine))
+            p.drawEllipse(QRectF(-r * 1.32, -r * 0.68, r * 2.64, r * 1.36))
+            p_ang_b = (-self.t * 1.7) % (math.pi * 2)
+            bx_b = math.cos(p_ang_b) * (r * 1.32)
+            by_b = math.sin(p_ang_b) * (r * 0.68)
+            p.setBrush(QBrush(col_crimson))
+            p.setPen(Qt.PenStyle.NoPen)
+            p.drawEllipse(QPointF(bx_b, by_b), 2.8, 2.8)
+            p.restore()
+
+            # 2. 12-Node Synaptic Network & Interconnecting Energy Chords
+            node_pts = []
+            for node in self._neural_nodes:
+                ang = node["angle"]
+                dist = r * node["r_mult"]
+                nx = cx + math.cos(ang) * dist
+                ny = cy + math.sin(ang) * dist
+                node_pts.append((nx, ny, node))
+
+            # Synaptic chords connecting nodes
+            for i in range(len(node_pts)):
+                nx1, ny1, n1 = node_pts[i]
+                for offset in (3, 5):
+                    j = (i + offset) % len(node_pts)
+                    nx2, ny2, n2 = node_pts[j]
+                    chord_alpha = int(45 * alpha * ((n1["charge"] + n2["charge"]) * 0.5))
+                    p.setPen(QPen(QColor(0, 220, 255, chord_alpha), 0.9))
+                    p.drawLine(QLineF(nx1, ny1, nx2, ny2))
+
+            # Traveling Synapse Energy Pulses
+            for sp in self._synapse_pulses:
+                idx_from = sp["from_node"] % len(node_pts)
+                idx_to = sp["to_node"] % len(node_pts)
+                x1, y1, _ = node_pts[idx_from]
+                x2, y2, _ = node_pts[idx_to]
+                prog = sp["progress"]
+                px = x1 + (x2 - x1) * prog
+                py = y1 + (y2 - y1) * prog
+                pulse_col = col_cyan if sp["color"] == "cyan" else (col_crimson if sp["color"] == "crimson" else col_gold)
+                p.setBrush(QBrush(pulse_col))
+                p.setPen(Qt.PenStyle.NoPen)
+                p.drawEllipse(QPointF(px, py), 2.4, 2.4)
+
+            # Draw Synaptic Nodes
+            p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
+            for nx, ny, node in node_pts:
+                charge = node["charge"]
+                p.setBrush(QBrush(QColor(0, 240, 255, int(40 * alpha * charge))))
+                p.setPen(Qt.PenStyle.NoPen)
+                p.drawEllipse(QPointF(nx, ny), 7.0 * charge, 7.0 * charge)
+
+                p.setBrush(QBrush(QColor(255, 255, 255, int(240 * alpha))))
+                p.setPen(QPen(col_crimson if node["speed"] > 0.5 else col_cyan, 1.2))
+                p.drawEllipse(QPointF(nx, ny), 3.0, 3.0)
+
+                p.setPen(QPen(QColor(200, 230, 255, int(160 * alpha)), 0.9))
+                p.drawText(QRectF(nx + 6, ny - 6, 40, 12), Qt.AlignmentFlag.AlignLeft, node["label"])
+
+            # 3. Floating Quantum Hex Bits Drifting Upward
+            p.setFont(QFont("Consolas", 6))
+            for qb in self._quantum_bits:
+                q_alpha = int(120 * alpha * (1.0 - abs(qb["y"])))
+                if q_alpha > 5:
+                    p.setPen(QPen(QColor(0, 230, 255, q_alpha), 1.0))
+                    p.drawText(QRectF(cx + qb["x"] * r * 1.3, cy + qb["y"] * r * 0.9, 45, 12),
+                               Qt.AlignmentFlag.AlignCenter, qb["val"])
+
+            # 4. Dynamic Multi-Harmonic Neural Waveform (Cognitive Oscilloscope)
+            osc_w = min(r * 2.2, 380.0)
+            osc_x = cx - osc_w / 2.0
+            osc_y = cy + r * 1.05
+            p.setPen(QPen(QColor(0, 255, 220, int(190 * alpha)), 1.5))
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            wave_path = QPainterPath()
+            for xi in range(int(osc_w)):
+                frac = xi / osc_w
+                env = math.sin(frac * math.pi)
+                wy = osc_y + env * (
+                    math.sin(self.t * 9.0 + xi * 0.12) * 9.0 +
+                    math.cos(self.t * 5.0 + xi * 0.06) * 5.0
+                )
+                if xi == 0:
+                    wave_path.moveTo(osc_x + xi, wy)
+                else:
+                    wave_path.lineTo(osc_x + xi, wy)
+            p.drawPath(wave_path)
+
+            p.setPen(QPen(QColor(0, 210, 255, int(50 * alpha)), 0.8, Qt.PenStyle.DotLine))
+            p.drawLine(QLineF(osc_x, osc_y, osc_x + osc_w, osc_y))
+            p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
+            p.setPen(QPen(QColor(0, 230, 255, int(180 * alpha)), 1.0))
+            p.drawText(QRectF(osc_x, osc_y + 14, osc_w, 12), Qt.AlignmentFlag.AlignCenter,
+                       "NEURAL FLUX // 4.88 GHz // ZERO LATENCY SYNAPSE")
+
+            # 5. Corner Diagnostic Telemetry Callouts
+            p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
+            p.setPen(QPen(col_crimson, 1.0))
+            p.drawText(QRectF(cx - r * 1.35, cy - r * 0.95, 120, 11), Qt.AlignmentFlag.AlignLeft, "QUANTUM CORE")
+            p.setFont(QFont("Consolas", 6))
+            p.setPen(QPen(col_cyan, 1.0))
+            p.drawText(QRectF(cx - r * 1.35, cy - r * 0.95 + 12, 140, 11), Qt.AlignmentFlag.AlignLeft, "128 TFLOPS // ACTIVE")
+
+            p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
+            p.setPen(QPen(col_crimson, 1.0))
+            p.drawText(QRectF(cx + r * 1.35 - 120, cy - r * 0.95, 120, 11), Qt.AlignmentFlag.AlignRight, "SYNAPSE COHERENCE")
+            p.setFont(QFont("Consolas", 6))
+            p.setPen(QPen(col_cyan, 1.0))
+            p.drawText(QRectF(cx + r * 1.35 - 140, cy - r * 0.95 + 12, 140, 11), Qt.AlignmentFlag.AlignRight, "99.8% // ENTROPY NULL")
+
+            p.restore()
+        except Exception:
+            pass
+
     # ── Category 1: SEARCH / HUNT (Master Recon Radar) ────────────────────────
+
 
     def _paint_search(self, p: QPainter, cx: float, cy: float, r: float, alpha: float) -> None:
         col_cyan = QColor(0, 240, 255, int(230 * alpha))
         col_cyan_glow = QColor(0, 210, 255, int(70 * alpha))
         col_dim = QColor(0, 150, 200, int(100 * alpha))
         col_red = QColor(255, 65, 50, int(240 * alpha))
+        col_gold = QColor(255, 205, 50, int(220 * alpha))
 
-        # 1. Outer Compass Dial with 64 Tick Marks & Azimuth Degree Legend
+        # 1. Outer Compass Dial with 64 Tick Marks & Cardinal Bearings
         dial_r = r * 1.34
         p.save()
         p.setBrush(Qt.BrushStyle.NoBrush)
@@ -642,15 +851,23 @@ class TaskAnimator:
                              math.cos(rad) * (dial_r - t_len), math.sin(rad) * (dial_r - t_len)))
         p.restore()
 
+        # Cardinal Points
+        p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
+        p.setPen(QPen(col_gold, 1.0))
+        p.drawText(QRectF(cx - 15, cy - dial_r - 14, 30, 12), Qt.AlignmentFlag.AlignCenter, "[N]")
+        p.drawText(QRectF(cx + dial_r + 4, cy - 6, 30, 12), Qt.AlignmentFlag.AlignLeft, "[E]")
+        p.drawText(QRectF(cx - 15, cy + dial_r + 4, 30, 12), Qt.AlignmentFlag.AlignCenter, "[S]")
+        p.drawText(QRectF(cx - dial_r - 34, cy - 6, 30, 12), Qt.AlignmentFlag.AlignRight, "[W]")
+
         # 2. Concentric Radar Range Rings
         p.setBrush(Qt.BrushStyle.NoBrush)
         for factor, label in [(0.35, "0.5 KM"), (0.68, "1.8 KM"), (1.00, "5.0 KM"), (1.30, "12.0 KM")]:
             rr = r * factor
             p.setPen(QPen(col_cyan_glow, 1.0, Qt.PenStyle.DashLine))
             p.drawEllipse(QPointF(cx, cy), rr, rr)
-            p.setFont(QFont("Consolas", 7, QFont.Weight.Bold))
+            p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
             p.setPen(QPen(QColor(0, 230, 255, int(150 * alpha)), 1.0))
-            p.drawText(QRectF(cx + rr - 35, cy - 14, 70, 14), Qt.AlignmentFlag.AlignRight, label)
+            p.drawText(QRectF(cx + rr - 35, cy - 12, 70, 12), Qt.AlignmentFlag.AlignRight, label)
 
         # Crosshair axes
         p.setPen(QPen(col_cyan_glow, 0.9, Qt.PenStyle.DotLine))
@@ -669,10 +886,15 @@ class TaskAnimator:
         p.setPen(QPen(QColor(255, 255, 255, int(250 * alpha)), 1.5))
         p.drawLine(QLineF(0, 0, sweep_len, 0))
 
+        # Tip laser beacon
+        p.setBrush(QBrush(QColor(255, 255, 255, int(240 * alpha))))
+        p.setPen(Qt.PenStyle.NoPen)
+        p.drawEllipse(QPointF(sweep_len, 0), 3.0, 3.0)
+
         # Trailing gradient sector
         path_tail = QPainterPath()
         path_tail.moveTo(0, 0)
-        tail_deg = 42.0
+        tail_deg = 45.0
         path_tail.arcTo(QRectF(-sweep_len, -sweep_len, sweep_len * 2, sweep_len * 2), 0.0, -tail_deg)
         path_tail.closeSubpath()
 
@@ -693,14 +915,34 @@ class TaskAnimator:
             p.drawEllipse(QPointF(cx, cy), s_r, s_r)
 
         # 5. Radar Target Blips with Lock-on Crosshairs & Telemetry
-        for b in self._radar_blips:
+        for bi, b in enumerate(self._radar_blips):
             bx = cx + math.cos(b["angle"]) * (r * b["dist"])
             by = cy + math.sin(b["angle"]) * (r * b["dist"])
             b_alpha = int(255 * alpha * b["life"])
 
+            is_primary = (bi == 0)
+
+            if is_primary:
+                # Vector tether line to center
+                p.setPen(QPen(QColor(255, 45, 40, int(120 * alpha)), 1.0, Qt.PenStyle.DashLine))
+                p.drawLine(QLineF(cx, cy, bx, by))
+
+                # Dynamic rotating diamond lock reticle
+                p.save()
+                p.translate(bx, by)
+                p.rotate(math.degrees(self.t * 3.5))
+                p.setBrush(Qt.BrushStyle.NoBrush)
+                p.setPen(QPen(QColor(255, 45, 40, b_alpha), 1.6))
+                dia_sz = 12.0
+                p.drawPolygon(QPolygonF([
+                    QPointF(0, -dia_sz), QPointF(dia_sz, 0),
+                    QPointF(0, dia_sz), QPointF(-dia_sz, 0)
+                ]))
+                p.restore()
+
             # Outer lock ring
             p.setBrush(Qt.BrushStyle.NoBrush)
-            p.setPen(QPen(col_red, 1.2))
+            p.setPen(QPen(col_red if is_primary else col_cyan, 1.2))
             p.drawEllipse(QPointF(bx, by), 5.0, 5.0)
 
             # Center target core
@@ -722,9 +964,23 @@ class TaskAnimator:
 
             # Telemetry label
             p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
-            p.setPen(QPen(QColor(220, 245, 255, b_alpha), 1.0))
-            p.drawText(QRectF(bx + sz + 5, by - 10, 110, 12), Qt.AlignmentFlag.AlignLeft, f"TARGET // {b['ip']}")
-            p.drawText(QRectF(bx + sz + 5, by + 1, 110, 12), Qt.AlignmentFlag.AlignLeft, f"RNG: {b['range']}m  LOCK")
+            p.setPen(QPen(QColor(255, 225, 120 if is_primary else 220, 245, 255, b_alpha), 1.0))
+            stat = "PRIMARY LOCK" if is_primary else "LOCK"
+            p.drawText(QRectF(bx + sz + 5, by - 10, 120, 12), Qt.AlignmentFlag.AlignLeft, f"TARGET // {b['ip']}")
+            p.drawText(QRectF(bx + sz + 5, by + 1, 120, 12), Qt.AlignmentFlag.AlignLeft, f"RNG: {b['range']}m  {stat}")
+
+        # 6. Bottom RF Spectrum Equalizer Band
+        rf_x = cx - 80
+        rf_y = cy + dial_r + 18
+        p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
+        p.setPen(QPen(col_cyan, 1.0))
+        p.drawText(QRectF(rf_x - 30, rf_y - 2, 220, 12), Qt.AlignmentFlag.AlignCenter, "RF SPECTRUM // 2.45 GHz SCANNING")
+        for bi in range(16):
+            b_h = 3 + 8 * (0.5 + 0.5 * math.sin(self.t * 6.0 + bi * 0.7))
+            p.setBrush(QBrush(col_cyan if bi % 3 != 0 else col_red))
+            p.setPen(Qt.PenStyle.NoPen)
+            p.drawRect(QRectF(rf_x + bi * 10, rf_y + 12 - b_h, 6, b_h))
+
 
     # ── Category 2: PURGE / INCINERATE (Thermal Disintegration) ───────────────
 
@@ -1185,18 +1441,70 @@ class TaskAnimator:
             p.setPen(Qt.PenStyle.NoPen)
             p.drawEllipse(QPointF(px, py), 2.5, 2.5)
 
-    # ── Category 10: GENERIC OVERCLOCK ───────────────────────────────────────
+    # ── Category 10: GENERIC OVERCLOCK (Tactical Directive HUD) ───────────────
 
     def _paint_generic(self, p: QPainter, cx: float, cy: float, r: float, alpha: float) -> None:
-        col_gold = QColor(255, 195, 45, int(230 * alpha))
-        p.save()
-        p.translate(cx, cy)
-        # Fast rotating azimuth tick rings
-        p.rotate(math.degrees(self.t * 3.8))
-        p.setPen(QPen(col_gold, 1.5, Qt.PenStyle.DashDotLine))
-        p.setBrush(Qt.BrushStyle.NoBrush)
-        p.drawEllipse(QRectF(-r * 1.28, -r * 1.28, r * 2.56, r * 2.56))
-        p.restore()
+        try:
+            col_crimson = QColor(255, 45, 40, int(220 * alpha))
+            col_cyan = QColor(0, 240, 255, int(210 * alpha))
+            col_gold = QColor(255, 205, 50, int(230 * alpha))
+
+            p.save()
+            p.translate(cx, cy)
+
+            # 1. Outer Counter-Rotating Segmented Notched Rings
+            p.save()
+            p.rotate(math.degrees(self.t * 2.2))
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.setPen(QPen(col_gold, 1.4, Qt.PenStyle.DashDotLine))
+            p.drawEllipse(QRectF(-r * 1.34, -r * 1.34, r * 2.68, r * 2.68))
+
+            # 8-point tick marks
+            for deg in range(0, 360, 45):
+                rad = math.radians(deg)
+                p.setPen(QPen(col_crimson, 1.6))
+                p.drawLine(QLineF(math.cos(rad) * (r * 1.34), math.sin(rad) * (r * 1.34),
+                                 math.cos(rad) * (r * 1.44), math.sin(rad) * (r * 1.44)))
+            p.restore()
+
+            # 2. Inner Rapid Gyro Arc
+            p.save()
+            p.rotate(-math.degrees(self.t * 3.4))
+            p.setPen(QPen(col_cyan, 1.6))
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            for arc_s in (20, 140, 260):
+                p.drawArc(QRectF(-r * 1.22, -r * 1.22, r * 2.44, r * 2.44), arc_s * 16, 80 * 16)
+
+            # Orbiting energy beads
+            for b_ang in (0.0, math.pi):
+                bx = math.cos(b_ang) * (r * 1.22)
+                by = math.sin(b_ang) * (r * 1.22)
+                p.setBrush(QBrush(QColor(255, 255, 255, int(240 * alpha))))
+                p.setPen(Qt.PenStyle.NoPen)
+                p.drawEllipse(QPointF(bx, by), 2.8, 2.8)
+            p.restore()
+
+            # 3. 4-Corner Tactical Framing Reticles
+            sz = r * 1.15
+            arm = 18.0
+            p.setPen(QPen(col_crimson, 1.4))
+            p.drawLine(QLineF(-sz, -sz, -sz + arm, -sz))
+            p.drawLine(QLineF(-sz, -sz, -sz, -sz + arm))
+            p.drawLine(QLineF(sz, -sz, sz - arm, -sz))
+            p.drawLine(QLineF(sz, -sz, sz, -sz + arm))
+            p.drawLine(QLineF(-sz, sz, -sz + arm, sz))
+            p.drawLine(QLineF(-sz, sz, -sz, sz - arm))
+            p.drawLine(QLineF(sz, sz, sz - arm, sz))
+            p.drawLine(QLineF(sz, sz, sz, sz - arm))
+
+            # Center Micro-Status
+            p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
+            p.setPen(QPen(col_cyan, 1.0))
+            p.drawText(QRectF(-120, r * 1.05, 240, 12), Qt.AlignmentFlag.AlignCenter,
+                       "OVERCLOCK // ACTIVE DIRECTIVE EXECUTION")
+            p.restore()
+        except Exception:
+            pass
 
     # ── Telemetry Banner & Completion Burst ──────────────────────────────────
 
@@ -1243,8 +1551,8 @@ class TaskAnimator:
 
     def _paint_completion_burst(self, p: QPainter, cx: float, cy: float, r: float, burst: float) -> None:
         """Draw an expanding holographic dual-ring shockwave burst confirming task completion."""
-        b_r1 = r * 0.4 + (1.0 - burst) * (r * 1.25)
-        b_r2 = r * 0.3 + (1.0 - burst) * (r * 0.95)
+        b_r1 = r * 0.4 + (1.0 - burst) * (r * 1.35)
+        b_r2 = r * 0.3 + (1.0 - burst) * (r * 1.05)
         b_alpha = int(245 * burst)
 
         p.save()
@@ -1253,7 +1561,7 @@ class TaskAnimator:
         # Dual expanding rings
         p.setPen(QPen(QColor(0, 255, 190, b_alpha), 2.8))
         p.drawEllipse(QPointF(cx, cy), b_r1, b_r1)
-        p.setPen(QPen(QColor(0, 230, 255, int(b_alpha * 0.6)), 1.4))
+        p.setPen(QPen(QColor(0, 230, 255, int(b_alpha * 0.7)), 1.6))
         p.drawEllipse(QPointF(cx, cy), b_r2, b_r2)
 
         # Hexagonal burst brackets
@@ -1264,9 +1572,20 @@ class TaskAnimator:
             hex_pts.append(QPointF(cx + math.cos(ang) * b_r1, cy + math.sin(ang) * b_r1))
         p.drawPolygon(QPolygonF(hex_pts))
 
+        # Radial sparks
+        for si in range(16):
+            ang = (si / 16.0) * math.pi * 2 + (1.0 - burst) * 0.4
+            spk_r = b_r1 * (0.85 + 0.25 * burst)
+            spk_x = cx + math.cos(ang) * spk_r
+            spk_y = cy + math.sin(ang) * spk_r
+            p.setBrush(QBrush(QColor(255, 255, 255, b_alpha)))
+            p.setPen(Qt.PenStyle.NoPen)
+            p.drawEllipse(QPointF(spk_x, spk_y), 2.2, 2.2)
+
         # "[ ✓ DIRECTIVE COMPLETED // SYMMETRY RESTORED ]" flourish
         p.setFont(QFont("Consolas", 9, QFont.Weight.Bold))
         p.setPen(QPen(QColor(0, 255, 190, b_alpha), 1.0))
         p.drawText(QRectF(cx - 200, cy - r * 0.85, 400, 22), Qt.AlignmentFlag.AlignCenter,
                    "[ ✓ DIRECTIVE COMPLETED // SYMMETRY RESTORED ]")
         p.restore()
+
