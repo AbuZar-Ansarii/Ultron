@@ -970,9 +970,13 @@ class HudCanvas(QWidget):
 
         # ── task animation overlay ──────────────────────────────────────────
         if self._task_animator is not None:
-            _anim_cy = _head_cy if (self._avatar is not None and self.hud_style == "face") else (_band_t + _band_h / 2.0)
-            _anim_r  = _r_head  if (self._avatar is not None and self.hud_style == "face") else _r
-            self._task_animator.paint(p, cx, _anim_cy, _anim_r, W, H)
+            try:
+                _anim_cy = _head_cy if (self._avatar is not None and self.hud_style == "face") else (_band_t + _band_h / 2.0)
+                _anim_r  = _r_head  if (self._avatar is not None and self.hud_style == "face") else _r
+                self._task_animator.paint(p, cx, _anim_cy, _anim_r, W, H)
+            except Exception:
+                pass
+
 
         # status text
         sy = _sy_status

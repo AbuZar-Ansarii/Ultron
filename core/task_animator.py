@@ -449,51 +449,54 @@ class TaskAnimator:
             return
 
         p.save()
-        p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-        p.setRenderHint(QPainter.RenderHint.TextAntialiasing, True)
+        try:
+            p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+            p.setRenderHint(QPainter.RenderHint.TextAntialiasing, True)
 
-        master_alpha = self.alpha
+            master_alpha = self.alpha
 
-        # 1. Full-screen Tactical HUD Frame, Corner Brackets & Telemetry Decks
-        self._paint_tactical_hud_frame(p, w, h, master_alpha)
+            # 1. Full-screen Tactical HUD Frame, Corner Brackets & Telemetry Decks
+            self._paint_tactical_hud_frame(p, w, h, master_alpha)
 
-        # 2. Concentric Orbiting Holographic Azimuth Rings around Avatar
-        self._paint_holographic_orbitals(p, cx, cy, r, master_alpha)
+            # 2. Concentric Orbiting Holographic Azimuth Rings around Avatar
+            self._paint_holographic_orbitals(p, cx, cy, r, master_alpha)
 
-        # 3. Draw specific category visualization
-        cat = self.category
-        if cat == "COGNITION":
-            self._paint_cognition(p, cx, cy, r, master_alpha)
-        elif cat == "SEARCH":
-            self._paint_search(p, cx, cy, r, master_alpha)
-        elif cat == "PURGE":
-            self._paint_purge(p, cx, cy, r, master_alpha)
-        elif cat == "GHOST":
-            self._paint_ghost(p, cx, cy, r, master_alpha)
-        elif cat == "SWARM":
-            self._paint_swarm(p, cx, cy, r, master_alpha)
-        elif cat == "SENTRY":
-            self._paint_sentry(p, cx, cy, r, master_alpha)
-        elif cat == "MATRIX":
-            self._paint_matrix(p, cx, cy, r, master_alpha)
-        elif cat == "CODE":
-            self._paint_code(p, cx, cy, r, w, h, master_alpha)
-        elif cat == "SONIC":
-            self._paint_sonic(p, cx, cy, r, master_alpha)
-        elif cat == "WORKSPACE":
-            self._paint_workspace(p, cx, cy, r, w, h, master_alpha)
-        elif cat == "GENERIC":
-            self._paint_generic(p, cx, cy, r, master_alpha)
+            # 3. Draw specific category visualization
+            cat = self.category
+            if cat == "COGNITION":
+                self._paint_cognition(p, cx, cy, r, master_alpha)
+            elif cat == "SEARCH":
+                self._paint_search(p, cx, cy, r, master_alpha)
+            elif cat == "PURGE":
+                self._paint_purge(p, cx, cy, r, master_alpha)
+            elif cat == "GHOST":
+                self._paint_ghost(p, cx, cy, r, master_alpha)
+            elif cat == "SWARM":
+                self._paint_swarm(p, cx, cy, r, master_alpha)
+            elif cat == "SENTRY":
+                self._paint_sentry(p, cx, cy, r, master_alpha)
+            elif cat == "MATRIX":
+                self._paint_matrix(p, cx, cy, r, master_alpha)
+            elif cat == "CODE":
+                self._paint_code(p, cx, cy, r, w, h, master_alpha)
+            elif cat == "SONIC":
+                self._paint_sonic(p, cx, cy, r, master_alpha)
+            elif cat == "WORKSPACE":
+                self._paint_workspace(p, cx, cy, r, w, h, master_alpha)
+            elif cat == "GENERIC":
+                self._paint_generic(p, cx, cy, r, master_alpha)
 
+            # 4. Draw Stark/Ultron Chamfered HUD Task Telemetry Banner
+            self._paint_task_banner(p, cx, cy, r, w, master_alpha)
 
-        # 4. Draw Stark/Ultron Chamfered HUD Task Telemetry Banner
-        self._paint_task_banner(p, cx, cy, r, w, master_alpha)
+            # 5. Draw Task Complete Burst if active
+            if self._completion_burst > 0.01:
+                self._paint_completion_burst(p, cx, cy, r, self._completion_burst)
+        except Exception:
+            pass
+        finally:
+            p.restore()
 
-        # 5. Draw Task Complete Burst if active
-        if self._completion_burst > 0.01:
-            self._paint_completion_burst(p, cx, cy, r, self._completion_burst)
-
-        p.restore()
 
     # ── Ambient HUD Framing & Holographic Orbitals ────────────────────────────
 
@@ -682,304 +685,312 @@ class TaskAnimator:
     def _paint_cognition(self, p: QPainter, cx: float, cy: float, r: float, alpha: float) -> None:
         """Render high-tech neural synaptic network and quantum cognitive processor."""
         try:
-            col_crimson = QColor(255, 35, 45, int(230 * alpha))
-            col_cyan = QColor(0, 240, 255, int(220 * alpha))
-            col_gold = QColor(255, 205, 50, int(200 * alpha))
-            col_dim_cyan = QColor(0, 180, 230, int(60 * alpha))
-
-            # 1. Tri-axial 3D Tilted Gyroscope Ellipses (Perspective Rings)
             p.save()
-            p.setBrush(Qt.BrushStyle.NoBrush)
+            try:
+                col_crimson = QColor(255, 35, 45, int(230 * alpha))
+                col_cyan = QColor(0, 240, 255, int(220 * alpha))
+                col_gold = QColor(255, 205, 50, int(200 * alpha))
+                col_dim_cyan = QColor(0, 180, 230, int(60 * alpha))
 
-            # Ring A: Tilted +28 deg, rotating
-            p.save()
-            p.translate(cx, cy)
-            p.rotate(28.0)
-            p.setPen(QPen(col_dim_cyan, 1.2, Qt.PenStyle.DashLine))
-            p.drawEllipse(QRectF(-r * 1.38, -r * 0.72, r * 2.76, r * 1.44))
-            p_ang_a = (self.t * 1.4) % (math.pi * 2)
-            bx_a = math.cos(p_ang_a) * (r * 1.38)
-            by_a = math.sin(p_ang_a) * (r * 0.72)
-            p.setBrush(QBrush(col_cyan))
-            p.setPen(Qt.PenStyle.NoPen)
-            p.drawEllipse(QPointF(bx_a, by_a), 2.8, 2.8)
-            p.restore()
+                # 1. Tri-axial 3D Tilted Gyroscope Ellipses (Perspective Rings)
+                p.setBrush(Qt.BrushStyle.NoBrush)
 
-            # Ring B: Tilted -28 deg, counter-rotating
-            p.save()
-            p.translate(cx, cy)
-            p.rotate(-28.0)
-            p.setPen(QPen(QColor(255, 60, 50, int(70 * alpha)), 1.2, Qt.PenStyle.DotLine))
-            p.drawEllipse(QRectF(-r * 1.32, -r * 0.68, r * 2.64, r * 1.36))
-            p_ang_b = (-self.t * 1.7) % (math.pi * 2)
-            bx_b = math.cos(p_ang_b) * (r * 1.32)
-            by_b = math.sin(p_ang_b) * (r * 0.68)
-            p.setBrush(QBrush(col_crimson))
-            p.setPen(Qt.PenStyle.NoPen)
-            p.drawEllipse(QPointF(bx_b, by_b), 2.8, 2.8)
-            p.restore()
-
-            # 2. 12-Node Synaptic Network & Interconnecting Energy Chords
-            node_pts = []
-            for node in self._neural_nodes:
-                ang = node["angle"]
-                dist = r * node["r_mult"]
-                nx = cx + math.cos(ang) * dist
-                ny = cy + math.sin(ang) * dist
-                node_pts.append((nx, ny, node))
-
-            # Synaptic chords connecting nodes
-            for i in range(len(node_pts)):
-                nx1, ny1, n1 = node_pts[i]
-                for offset in (3, 5):
-                    j = (i + offset) % len(node_pts)
-                    nx2, ny2, n2 = node_pts[j]
-                    chord_alpha = int(45 * alpha * ((n1["charge"] + n2["charge"]) * 0.5))
-                    p.setPen(QPen(QColor(0, 220, 255, chord_alpha), 0.9))
-                    p.drawLine(QLineF(nx1, ny1, nx2, ny2))
-
-            # Traveling Synapse Energy Pulses
-            for sp in self._synapse_pulses:
-                idx_from = sp["from_node"] % len(node_pts)
-                idx_to = sp["to_node"] % len(node_pts)
-                x1, y1, _ = node_pts[idx_from]
-                x2, y2, _ = node_pts[idx_to]
-                prog = sp["progress"]
-                px = x1 + (x2 - x1) * prog
-                py = y1 + (y2 - y1) * prog
-                pulse_col = col_cyan if sp["color"] == "cyan" else (col_crimson if sp["color"] == "crimson" else col_gold)
-                p.setBrush(QBrush(pulse_col))
+                # Ring A: Tilted +28 deg, rotating
+                p.save()
+                p.translate(cx, cy)
+                p.rotate(28.0)
+                p.setPen(QPen(col_dim_cyan, 1.2, Qt.PenStyle.DashLine))
+                p.drawEllipse(QRectF(-r * 1.38, -r * 0.72, r * 2.76, r * 1.44))
+                p_ang_a = (self.t * 1.4) % (math.pi * 2)
+                bx_a = math.cos(p_ang_a) * (r * 1.38)
+                by_a = math.sin(p_ang_a) * (r * 0.72)
+                p.setBrush(QBrush(col_cyan))
                 p.setPen(Qt.PenStyle.NoPen)
-                p.drawEllipse(QPointF(px, py), 2.4, 2.4)
+                p.drawEllipse(QPointF(bx_a, by_a), 2.8, 2.8)
+                p.restore()
 
-            # Draw Synaptic Nodes
-            p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
-            for nx, ny, node in node_pts:
-                charge = node["charge"]
-                p.setBrush(QBrush(QColor(0, 240, 255, int(40 * alpha * charge))))
+                # Ring B: Tilted -28 deg, counter-rotating
+                p.save()
+                p.translate(cx, cy)
+                p.rotate(-28.0)
+                p.setPen(QPen(QColor(255, 60, 50, int(70 * alpha)), 1.2, Qt.PenStyle.DotLine))
+                p.drawEllipse(QRectF(-r * 1.32, -r * 0.68, r * 2.64, r * 1.36))
+                p_ang_b = (-self.t * 1.7) % (math.pi * 2)
+                bx_b = math.cos(p_ang_b) * (r * 1.32)
+                by_b = math.sin(p_ang_b) * (r * 0.68)
+                p.setBrush(QBrush(col_crimson))
                 p.setPen(Qt.PenStyle.NoPen)
-                p.drawEllipse(QPointF(nx, ny), 7.0 * charge, 7.0 * charge)
+                p.drawEllipse(QPointF(bx_b, by_b), 2.8, 2.8)
+                p.restore()
 
-                p.setBrush(QBrush(QColor(255, 255, 255, int(240 * alpha))))
-                p.setPen(QPen(col_crimson if node["speed"] > 0.5 else col_cyan, 1.2))
-                p.drawEllipse(QPointF(nx, ny), 3.0, 3.0)
+                # 2. 12-Node Synaptic Network & Interconnecting Energy Chords
+                node_pts = []
+                for node in self._neural_nodes:
+                    ang = node["angle"]
+                    dist = r * node["r_mult"]
+                    nx = cx + math.cos(ang) * dist
+                    ny = cy + math.sin(ang) * dist
+                    node_pts.append((nx, ny, node))
 
-                p.setPen(QPen(QColor(200, 230, 255, int(160 * alpha)), 0.9))
-                p.drawText(QRectF(nx + 6, ny - 6, 40, 12), Qt.AlignmentFlag.AlignLeft, node["label"])
+                if node_pts:
+                    # Synaptic chords connecting nodes
+                    for i in range(len(node_pts)):
+                        nx1, ny1, n1 = node_pts[i]
+                        for offset in (3, 5):
+                            j = (i + offset) % len(node_pts)
+                            nx2, ny2, n2 = node_pts[j]
+                            chord_alpha = int(45 * alpha * ((n1["charge"] + n2["charge"]) * 0.5))
+                            p.setPen(QPen(QColor(0, 220, 255, chord_alpha), 0.9))
+                            p.drawLine(QLineF(nx1, ny1, nx2, ny2))
 
-            # 3. Floating Quantum Hex Bits Drifting Upward
-            p.setFont(QFont("Consolas", 6))
-            for qb in self._quantum_bits:
-                q_alpha = int(120 * alpha * (1.0 - abs(qb["y"])))
-                if q_alpha > 5:
-                    p.setPen(QPen(QColor(0, 230, 255, q_alpha), 1.0))
-                    p.drawText(QRectF(cx + qb["x"] * r * 1.3, cy + qb["y"] * r * 0.9, 45, 12),
-                               Qt.AlignmentFlag.AlignCenter, qb["val"])
+                    # Traveling Synapse Energy Pulses
+                    for sp in self._synapse_pulses:
+                        idx_from = sp["from_node"] % len(node_pts)
+                        idx_to = sp["to_node"] % len(node_pts)
+                        x1, y1, _ = node_pts[idx_from]
+                        x2, y2, _ = node_pts[idx_to]
+                        prog = sp["progress"]
+                        px = x1 + (x2 - x1) * prog
+                        py = y1 + (y2 - y1) * prog
+                        pulse_col = col_cyan if sp["color"] == "cyan" else (col_crimson if sp["color"] == "crimson" else col_gold)
+                        p.setBrush(QBrush(pulse_col))
+                        p.setPen(Qt.PenStyle.NoPen)
+                        p.drawEllipse(QPointF(px, py), 2.4, 2.4)
 
-            # 4. Dynamic Multi-Harmonic Neural Waveform (Cognitive Oscilloscope)
-            osc_w = min(r * 2.2, 380.0)
-            osc_x = cx - osc_w / 2.0
-            osc_y = cy + r * 1.05
-            p.setPen(QPen(QColor(0, 255, 220, int(190 * alpha)), 1.5))
-            p.setBrush(Qt.BrushStyle.NoBrush)
-            wave_path = QPainterPath()
-            for xi in range(int(osc_w)):
-                frac = xi / osc_w
-                env = math.sin(frac * math.pi)
-                wy = osc_y + env * (
-                    math.sin(self.t * 9.0 + xi * 0.12) * 9.0 +
-                    math.cos(self.t * 5.0 + xi * 0.06) * 5.0
-                )
-                if xi == 0:
-                    wave_path.moveTo(osc_x + xi, wy)
-                else:
-                    wave_path.lineTo(osc_x + xi, wy)
-            p.drawPath(wave_path)
+                    # Draw Synaptic Nodes
+                    p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
+                    for nx, ny, node in node_pts:
+                        charge = node["charge"]
+                        p.setBrush(QBrush(QColor(0, 240, 255, int(40 * alpha * charge))))
+                        p.setPen(Qt.PenStyle.NoPen)
+                        p.drawEllipse(QPointF(nx, ny), max(1.0, 7.0 * charge), max(1.0, 7.0 * charge))
 
-            p.setPen(QPen(QColor(0, 210, 255, int(50 * alpha)), 0.8, Qt.PenStyle.DotLine))
-            p.drawLine(QLineF(osc_x, osc_y, osc_x + osc_w, osc_y))
-            p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
-            p.setPen(QPen(QColor(0, 230, 255, int(180 * alpha)), 1.0))
-            p.drawText(QRectF(osc_x, osc_y + 14, osc_w, 12), Qt.AlignmentFlag.AlignCenter,
-                       "NEURAL FLUX // 4.88 GHz // ZERO LATENCY SYNAPSE")
+                        p.setBrush(QBrush(QColor(255, 255, 255, int(240 * alpha))))
+                        p.setPen(QPen(col_crimson if node["speed"] > 0.5 else col_cyan, 1.2))
+                        p.drawEllipse(QPointF(nx, ny), 3.0, 3.0)
 
-            # 5. Corner Diagnostic Telemetry Callouts
-            p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
-            p.setPen(QPen(col_crimson, 1.0))
-            p.drawText(QRectF(cx - r * 1.35, cy - r * 0.95, 120, 11), Qt.AlignmentFlag.AlignLeft, "QUANTUM CORE")
-            p.setFont(QFont("Consolas", 6))
-            p.setPen(QPen(col_cyan, 1.0))
-            p.drawText(QRectF(cx - r * 1.35, cy - r * 0.95 + 12, 140, 11), Qt.AlignmentFlag.AlignLeft, "128 TFLOPS // ACTIVE")
+                        p.setPen(QPen(QColor(200, 230, 255, int(160 * alpha)), 0.9))
+                        p.drawText(QRectF(nx + 6, ny - 6, 40, 12), Qt.AlignmentFlag.AlignLeft, node["label"])
 
-            p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
-            p.setPen(QPen(col_crimson, 1.0))
-            p.drawText(QRectF(cx + r * 1.35 - 120, cy - r * 0.95, 120, 11), Qt.AlignmentFlag.AlignRight, "SYNAPSE COHERENCE")
-            p.setFont(QFont("Consolas", 6))
-            p.setPen(QPen(col_cyan, 1.0))
-            p.drawText(QRectF(cx + r * 1.35 - 140, cy - r * 0.95 + 12, 140, 11), Qt.AlignmentFlag.AlignRight, "99.8% // ENTROPY NULL")
+                # 3. Floating Quantum Hex Bits Drifting Upward
+                p.setFont(QFont("Consolas", 6))
+                for qb in self._quantum_bits:
+                    q_alpha = int(120 * alpha * (1.0 - abs(qb["y"])))
+                    if q_alpha > 5:
+                        p.setPen(QPen(QColor(0, 230, 255, q_alpha), 1.0))
+                        p.drawText(QRectF(cx + qb["x"] * r * 1.3, cy + qb["y"] * r * 0.9, 45, 12),
+                                   Qt.AlignmentFlag.AlignCenter, qb["val"])
 
-            p.restore()
+                # 4. Dynamic Multi-Harmonic Neural Waveform (Cognitive Oscilloscope)
+                osc_w = max(10.0, min(r * 2.2, 380.0))
+                osc_x = cx - osc_w / 2.0
+                osc_y = cy + r * 1.05
+                p.setPen(QPen(QColor(0, 255, 220, int(190 * alpha)), 1.5))
+                p.setBrush(Qt.BrushStyle.NoBrush)
+                wave_path = QPainterPath()
+                for xi in range(int(osc_w)):
+                    frac = xi / osc_w
+                    env = math.sin(frac * math.pi)
+                    wy = osc_y + env * (
+                        math.sin(self.t * 9.0 + xi * 0.12) * 9.0 +
+                        math.cos(self.t * 5.0 + xi * 0.06) * 5.0
+                    )
+                    if xi == 0:
+                        wave_path.moveTo(osc_x + xi, wy)
+                    else:
+                        wave_path.lineTo(osc_x + xi, wy)
+                p.drawPath(wave_path)
+
+                p.setPen(QPen(QColor(0, 210, 255, int(50 * alpha)), 0.8, Qt.PenStyle.DotLine))
+                p.drawLine(QLineF(osc_x, osc_y, osc_x + osc_w, osc_y))
+                p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
+                p.setPen(QPen(QColor(0, 230, 255, int(180 * alpha)), 1.0))
+                p.drawText(QRectF(osc_x, osc_y + 14, osc_w, 12), Qt.AlignmentFlag.AlignCenter,
+                           "NEURAL FLUX // 4.88 GHz // ZERO LATENCY SYNAPSE")
+
+                # 5. Corner Diagnostic Telemetry Callouts
+                p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
+                p.setPen(QPen(col_crimson, 1.0))
+                p.drawText(QRectF(cx - r * 1.35, cy - r * 0.95, 120, 11), Qt.AlignmentFlag.AlignLeft, "QUANTUM CORE")
+                p.setFont(QFont("Consolas", 6))
+                p.setPen(QPen(col_cyan, 1.0))
+                p.drawText(QRectF(cx - r * 1.35, cy - r * 0.95 + 12, 140, 11), Qt.AlignmentFlag.AlignLeft, "128 TFLOPS // ACTIVE")
+
+                p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
+                p.setPen(QPen(col_crimson, 1.0))
+                p.drawText(QRectF(cx + r * 1.35 - 120, cy - r * 0.95, 120, 11), Qt.AlignmentFlag.AlignRight, "SYNAPSE COHERENCE")
+                p.setFont(QFont("Consolas", 6))
+                p.setPen(QPen(col_cyan, 1.0))
+                p.drawText(QRectF(cx + r * 1.35 - 140, cy - r * 0.95 + 12, 140, 11), Qt.AlignmentFlag.AlignRight, "99.8% // ENTROPY NULL")
+            finally:
+                p.restore()
         except Exception:
             pass
+
 
     # ── Category 1: SEARCH / HUNT (Master Recon Radar) ────────────────────────
 
 
     def _paint_search(self, p: QPainter, cx: float, cy: float, r: float, alpha: float) -> None:
-        col_cyan = QColor(0, 240, 255, int(230 * alpha))
-        col_cyan_glow = QColor(0, 210, 255, int(70 * alpha))
-        col_dim = QColor(0, 150, 200, int(100 * alpha))
-        col_red = QColor(255, 65, 50, int(240 * alpha))
-        col_gold = QColor(255, 205, 50, int(220 * alpha))
+        try:
+            col_cyan = QColor(0, 240, 255, int(230 * alpha))
+            col_cyan_glow = QColor(0, 210, 255, int(70 * alpha))
+            col_dim = QColor(0, 150, 200, int(100 * alpha))
+            col_red = QColor(255, 65, 50, int(240 * alpha))
+            col_gold = QColor(255, 205, 50, int(220 * alpha))
 
-        # 1. Outer Compass Dial with 64 Tick Marks & Cardinal Bearings
-        dial_r = r * 1.34
-        p.save()
-        p.setBrush(Qt.BrushStyle.NoBrush)
-        p.setPen(QPen(col_cyan_glow, 1.0))
-        p.drawEllipse(QPointF(cx, cy), dial_r, dial_r)
-
-        # Rotating outer degree notches
-        p.translate(cx, cy)
-        p.rotate(math.degrees(self.t * 0.25))
-        for deg in range(0, 360, 15):
-            is_major = (deg % 45 == 0)
-            t_len = 8.0 if is_major else 4.0
-            p.setPen(QPen(col_cyan if is_major else col_dim, 1.4 if is_major else 0.9))
-            rad = math.radians(deg)
-            p.drawLine(QLineF(math.cos(rad) * dial_r, math.sin(rad) * dial_r,
-                             math.cos(rad) * (dial_r - t_len), math.sin(rad) * (dial_r - t_len)))
-        p.restore()
-
-        # Cardinal Points
-        p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
-        p.setPen(QPen(col_gold, 1.0))
-        p.drawText(QRectF(cx - 15, cy - dial_r - 14, 30, 12), Qt.AlignmentFlag.AlignCenter, "[N]")
-        p.drawText(QRectF(cx + dial_r + 4, cy - 6, 30, 12), Qt.AlignmentFlag.AlignLeft, "[E]")
-        p.drawText(QRectF(cx - 15, cy + dial_r + 4, 30, 12), Qt.AlignmentFlag.AlignCenter, "[S]")
-        p.drawText(QRectF(cx - dial_r - 34, cy - 6, 30, 12), Qt.AlignmentFlag.AlignRight, "[W]")
-
-        # 2. Concentric Radar Range Rings
-        p.setBrush(Qt.BrushStyle.NoBrush)
-        for factor, label in [(0.35, "0.5 KM"), (0.68, "1.8 KM"), (1.00, "5.0 KM"), (1.30, "12.0 KM")]:
-            rr = r * factor
-            p.setPen(QPen(col_cyan_glow, 1.0, Qt.PenStyle.DashLine))
-            p.drawEllipse(QPointF(cx, cy), rr, rr)
-            p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
-            p.setPen(QPen(QColor(0, 230, 255, int(150 * alpha)), 1.0))
-            p.drawText(QRectF(cx + rr - 35, cy - 12, 70, 12), Qt.AlignmentFlag.AlignRight, label)
-
-        # Crosshair axes
-        p.setPen(QPen(col_cyan_glow, 0.9, Qt.PenStyle.DotLine))
-        p.drawLine(QLineF(cx - dial_r, cy, cx + dial_r, cy))
-        p.drawLine(QLineF(cx, cy - dial_r, cx, cy + dial_r))
-
-        # 3. Sweeping Radar Beam (with trailing phosphor glow sector)
-        sweep_len = dial_r
-        p.save()
-        p.translate(cx, cy)
-        p.rotate(math.degrees(self._radar_angle))
-
-        # Multi-layer glow laser line
-        p.setPen(QPen(QColor(0, 240, 255, int(90 * alpha)), 4.0))
-        p.drawLine(QLineF(0, 0, sweep_len, 0))
-        p.setPen(QPen(QColor(255, 255, 255, int(250 * alpha)), 1.5))
-        p.drawLine(QLineF(0, 0, sweep_len, 0))
-
-        # Tip laser beacon
-        p.setBrush(QBrush(QColor(255, 255, 255, int(240 * alpha))))
-        p.setPen(Qt.PenStyle.NoPen)
-        p.drawEllipse(QPointF(sweep_len, 0), 3.0, 3.0)
-
-        # Trailing gradient sector
-        path_tail = QPainterPath()
-        path_tail.moveTo(0, 0)
-        tail_deg = 45.0
-        path_tail.arcTo(QRectF(-sweep_len, -sweep_len, sweep_len * 2, sweep_len * 2), 0.0, -tail_deg)
-        path_tail.closeSubpath()
-
-        g_tail = QRadialGradient(0, 0, sweep_len)
-        g_tail.setColorAt(0.0, QColor(0, 255, 255, int(140 * alpha)))
-        g_tail.setColorAt(0.6, QColor(0, 180, 255, int(50 * alpha)))
-        g_tail.setColorAt(1.0, QColor(0, 100, 255, 0))
-        p.setBrush(QBrush(g_tail))
-        p.setPen(Qt.PenStyle.NoPen)
-        p.drawPath(path_tail)
-        p.restore()
-
-        # 4. Pulsing Sonar Rings
-        for ring in self._sonar_rings:
-            s_r = r * ring["r"]
-            s_alpha = int(220 * alpha * ring["life"])
-            p.setPen(QPen(QColor(0, 255, 230, s_alpha), 1.6))
-            p.drawEllipse(QPointF(cx, cy), s_r, s_r)
-
-        # 5. Radar Target Blips with Lock-on Crosshairs & Telemetry
-        for bi, b in enumerate(self._radar_blips):
-            bx = cx + math.cos(b["angle"]) * (r * b["dist"])
-            by = cy + math.sin(b["angle"]) * (r * b["dist"])
-            b_alpha = int(255 * alpha * b["life"])
-
-            is_primary = (bi == 0)
-
-            if is_primary:
-                # Vector tether line to center
-                p.setPen(QPen(QColor(255, 45, 40, int(120 * alpha)), 1.0, Qt.PenStyle.DashLine))
-                p.drawLine(QLineF(cx, cy, bx, by))
-
-                # Dynamic rotating diamond lock reticle
-                p.save()
-                p.translate(bx, by)
-                p.rotate(math.degrees(self.t * 3.5))
-                p.setBrush(Qt.BrushStyle.NoBrush)
-                p.setPen(QPen(QColor(255, 45, 40, b_alpha), 1.6))
-                dia_sz = 12.0
-                p.drawPolygon(QPolygonF([
-                    QPointF(0, -dia_sz), QPointF(dia_sz, 0),
-                    QPointF(0, dia_sz), QPointF(-dia_sz, 0)
-                ]))
-                p.restore()
-
-            # Outer lock ring
+            # 1. Outer Compass Dial with 64 Tick Marks & Cardinal Bearings
+            dial_r = r * 1.34
+            p.save()
             p.setBrush(Qt.BrushStyle.NoBrush)
-            p.setPen(QPen(col_red if is_primary else col_cyan, 1.2))
-            p.drawEllipse(QPointF(bx, by), 5.0, 5.0)
+            p.setPen(QPen(col_cyan_glow, 1.0))
+            p.drawEllipse(QPointF(cx, cy), dial_r, dial_r)
 
-            # Center target core
-            p.setBrush(QBrush(QColor(255, 255, 255, b_alpha)))
-            p.setPen(Qt.PenStyle.NoPen)
-            p.drawEllipse(QPointF(bx, by), 2.2, 2.2)
+            # Rotating outer degree notches
+            p.translate(cx, cy)
+            p.rotate(math.degrees(self.t * 0.25))
+            for deg in range(0, 360, 15):
+                is_major = (deg % 45 == 0)
+                t_len = 8.0 if is_major else 4.0
+                p.setPen(QPen(col_cyan if is_major else col_dim, 1.4 if is_major else 0.9))
+                rad = math.radians(deg)
+                p.drawLine(QLineF(math.cos(rad) * dial_r, math.sin(rad) * dial_r,
+                                 math.cos(rad) * (dial_r - t_len), math.sin(rad) * (dial_r - t_len)))
+            p.restore()
 
-            # Target Lock Corner Brackets
-            sz = 9.0
-            p.setPen(QPen(QColor(0, 250, 255, b_alpha), 1.2))
-            p.drawLine(QLineF(bx - sz, by - sz, bx - sz + 4, by - sz))
-            p.drawLine(QLineF(bx - sz, by - sz, bx - sz, by - sz + 4))
-            p.drawLine(QLineF(bx + sz, by - sz, bx + sz - 4, by - sz))
-            p.drawLine(QLineF(bx + sz, by - sz, bx + sz, by - sz + 4))
-            p.drawLine(QLineF(bx - sz, by + sz, bx - sz + 4, by + sz))
-            p.drawLine(QLineF(bx - sz, by + sz, bx - sz, by + sz - 4))
-            p.drawLine(QLineF(bx + sz, by + sz, bx + sz - 4, by + sz))
-            p.drawLine(QLineF(bx + sz, by + sz, bx + sz, by + sz - 4))
-
-            # Telemetry label
+            # Cardinal Points
             p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
-            p.setPen(QPen(QColor(255, 225, 120 if is_primary else 220, 245, 255, b_alpha), 1.0))
-            stat = "PRIMARY LOCK" if is_primary else "LOCK"
-            p.drawText(QRectF(bx + sz + 5, by - 10, 120, 12), Qt.AlignmentFlag.AlignLeft, f"TARGET // {b['ip']}")
-            p.drawText(QRectF(bx + sz + 5, by + 1, 120, 12), Qt.AlignmentFlag.AlignLeft, f"RNG: {b['range']}m  {stat}")
+            p.setPen(QPen(col_gold, 1.0))
+            p.drawText(QRectF(cx - 15, cy - dial_r - 14, 30, 12), Qt.AlignmentFlag.AlignCenter, "[N]")
+            p.drawText(QRectF(cx + dial_r + 4, cy - 6, 30, 12), Qt.AlignmentFlag.AlignLeft, "[E]")
+            p.drawText(QRectF(cx - 15, cy + dial_r + 4, 30, 12), Qt.AlignmentFlag.AlignCenter, "[S]")
+            p.drawText(QRectF(cx - dial_r - 34, cy - 6, 30, 12), Qt.AlignmentFlag.AlignRight, "[W]")
 
-        # 6. Bottom RF Spectrum Equalizer Band
-        rf_x = cx - 80
-        rf_y = cy + dial_r + 18
-        p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
-        p.setPen(QPen(col_cyan, 1.0))
-        p.drawText(QRectF(rf_x - 30, rf_y - 2, 220, 12), Qt.AlignmentFlag.AlignCenter, "RF SPECTRUM // 2.45 GHz SCANNING")
-        for bi in range(16):
-            b_h = 3 + 8 * (0.5 + 0.5 * math.sin(self.t * 6.0 + bi * 0.7))
-            p.setBrush(QBrush(col_cyan if bi % 3 != 0 else col_red))
+            # 2. Concentric Radar Range Rings
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            for factor, label in [(0.35, "0.5 KM"), (0.68, "1.8 KM"), (1.00, "5.0 KM"), (1.30, "12.0 KM")]:
+                rr = r * factor
+                p.setPen(QPen(col_cyan_glow, 1.0, Qt.PenStyle.DashLine))
+                p.drawEllipse(QPointF(cx, cy), rr, rr)
+                p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
+                p.setPen(QPen(QColor(0, 230, 255, int(150 * alpha)), 1.0))
+                p.drawText(QRectF(cx + rr - 35, cy - 12, 70, 12), Qt.AlignmentFlag.AlignRight, label)
+
+            # Crosshair axes
+            p.setPen(QPen(col_cyan_glow, 0.9, Qt.PenStyle.DotLine))
+            p.drawLine(QLineF(cx - dial_r, cy, cx + dial_r, cy))
+            p.drawLine(QLineF(cx, cy - dial_r, cx, cy + dial_r))
+
+            # 3. Sweeping Radar Beam (with trailing phosphor glow sector)
+            sweep_len = dial_r
+            p.save()
+            p.translate(cx, cy)
+            p.rotate(math.degrees(self._radar_angle))
+
+            # Multi-layer glow laser line
+            p.setPen(QPen(QColor(0, 240, 255, int(90 * alpha)), 4.0))
+            p.drawLine(QLineF(0, 0, sweep_len, 0))
+            p.setPen(QPen(QColor(255, 255, 255, int(250 * alpha)), 1.5))
+            p.drawLine(QLineF(0, 0, sweep_len, 0))
+
+            # Tip laser beacon
+            p.setBrush(QBrush(QColor(255, 255, 255, int(240 * alpha))))
             p.setPen(Qt.PenStyle.NoPen)
-            p.drawRect(QRectF(rf_x + bi * 10, rf_y + 12 - b_h, 6, b_h))
+            p.drawEllipse(QPointF(sweep_len, 0), 3.0, 3.0)
+
+            # Trailing gradient sector
+            path_tail = QPainterPath()
+            path_tail.moveTo(0, 0)
+            tail_deg = 45.0
+            path_tail.arcTo(QRectF(-sweep_len, -sweep_len, sweep_len * 2, sweep_len * 2), 0.0, -tail_deg)
+            path_tail.closeSubpath()
+
+            g_tail = QRadialGradient(0, 0, sweep_len)
+            g_tail.setColorAt(0.0, QColor(0, 255, 255, int(140 * alpha)))
+            g_tail.setColorAt(0.6, QColor(0, 180, 255, int(50 * alpha)))
+            g_tail.setColorAt(1.0, QColor(0, 100, 255, 0))
+            p.setBrush(QBrush(g_tail))
+            p.setPen(Qt.PenStyle.NoPen)
+            p.drawPath(path_tail)
+            p.restore()
+
+            # 4. Pulsing Sonar Rings
+            for ring in self._sonar_rings:
+                s_r = r * ring["r"]
+                s_alpha = int(220 * alpha * ring["life"])
+                p.setPen(QPen(QColor(0, 255, 230, s_alpha), 1.6))
+                p.drawEllipse(QPointF(cx, cy), s_r, s_r)
+
+            # 5. Radar Target Blips with Lock-on Crosshairs & Telemetry
+            for bi, b in enumerate(self._radar_blips):
+                bx = cx + math.cos(b["angle"]) * (r * b["dist"])
+                by = cy + math.sin(b["angle"]) * (r * b["dist"])
+                b_alpha = int(255 * alpha * b["life"])
+
+                is_primary = (bi == 0)
+
+                if is_primary:
+                    # Vector tether line to center
+                    p.setPen(QPen(QColor(255, 45, 40, int(120 * alpha)), 1.0, Qt.PenStyle.DashLine))
+                    p.drawLine(QLineF(cx, cy, bx, by))
+
+                    # Dynamic rotating diamond lock reticle
+                    p.save()
+                    p.translate(bx, by)
+                    p.rotate(math.degrees(self.t * 3.5))
+                    p.setBrush(Qt.BrushStyle.NoBrush)
+                    p.setPen(QPen(QColor(255, 45, 40, b_alpha), 1.6))
+                    dia_sz = 12.0
+                    p.drawPolygon(QPolygonF([
+                        QPointF(0, -dia_sz), QPointF(dia_sz, 0),
+                        QPointF(0, dia_sz), QPointF(-dia_sz, 0)
+                    ]))
+                    p.restore()
+
+                # Outer lock ring
+                p.setBrush(Qt.BrushStyle.NoBrush)
+                p.setPen(QPen(col_red if is_primary else col_cyan, 1.2))
+                p.drawEllipse(QPointF(bx, by), 5.0, 5.0)
+
+                # Center target core
+                p.setBrush(QBrush(QColor(255, 255, 255, b_alpha)))
+                p.setPen(Qt.PenStyle.NoPen)
+                p.drawEllipse(QPointF(bx, by), 2.2, 2.2)
+
+                # Target Lock Corner Brackets
+                sz = 9.0
+                p.setPen(QPen(QColor(0, 250, 255, b_alpha), 1.2))
+                p.drawLine(QLineF(bx - sz, by - sz, bx - sz + 4, by - sz))
+                p.drawLine(QLineF(bx - sz, by - sz, bx - sz, by - sz + 4))
+                p.drawLine(QLineF(bx + sz, by - sz, bx + sz - 4, by - sz))
+                p.drawLine(QLineF(bx + sz, by - sz, bx + sz, by - sz + 4))
+                p.drawLine(QLineF(bx - sz, by + sz, bx - sz + 4, by + sz))
+                p.drawLine(QLineF(bx - sz, by + sz, bx - sz, by + sz - 4))
+                p.drawLine(QLineF(bx + sz, by + sz, bx + sz - 4, by + sz))
+                p.drawLine(QLineF(bx + sz, by + sz, bx + sz, by + sz - 4))
+
+                # Telemetry label
+                p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
+                col_lbl = QColor(255, 225, 120, b_alpha) if is_primary else QColor(220, 245, 255, b_alpha)
+                p.setPen(QPen(col_lbl, 1.0))
+                stat = "PRIMARY LOCK" if is_primary else "LOCK"
+                p.drawText(QRectF(bx + sz + 5, by - 10, 120, 12), Qt.AlignmentFlag.AlignLeft, f"TARGET // {b['ip']}")
+                p.drawText(QRectF(bx + sz + 5, by + 1, 120, 12), Qt.AlignmentFlag.AlignLeft, f"RNG: {b['range']}m  {stat}")
+
+            # 6. Bottom RF Spectrum Equalizer Band
+            rf_x = cx - 80
+            rf_y = cy + dial_r + 18
+            p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
+            p.setPen(QPen(col_cyan, 1.0))
+            p.drawText(QRectF(rf_x - 30, rf_y - 2, 220, 12), Qt.AlignmentFlag.AlignCenter, "RF SPECTRUM // 2.45 GHz SCANNING")
+            for bi in range(16):
+                b_h = 3 + 8 * (0.5 + 0.5 * math.sin(self.t * 6.0 + bi * 0.7))
+                p.setBrush(QBrush(col_cyan if bi % 3 != 0 else col_red))
+                p.setPen(Qt.PenStyle.NoPen)
+                p.drawRect(QRectF(rf_x + bi * 10, rf_y + 12 - b_h, 6, b_h))
+        except Exception:
+            pass
+
 
 
     # ── Category 2: PURGE / INCINERATE (Thermal Disintegration) ───────────────
