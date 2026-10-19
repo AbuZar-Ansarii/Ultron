@@ -3400,8 +3400,8 @@ class RemoteKeyOverlay(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.setStyleSheet(f"""
             RemoteKeyOverlay {{
-                background: rgba(0, 4, 12, 0.95);
-                border: 1px solid {C.BORDER_B};
+                background: rgba(7, 8, 14, 0.98);
+                border: 1.5px solid {C.PRI};
                 border-radius: 14px;
             }}
         """)
@@ -3424,7 +3424,8 @@ class RemoteKeyOverlay(QWidget):
             w.setWordWrap(True)
             return w
 
-        lay.addWidget(_lbl("◈  REMOTE ACCESS", 12, True))
+        lay.addWidget(_lbl("◈  ULTRON // NEURAL UPLINK  ◈", 11, True, color=C.PRI))
+        lay.addWidget(_lbl("MOBILE WORKSTATION SYNCHRONIZATION", 7, False, color=C.TEXT_DIM))
         sep = QFrame(); sep.setFrameShape(QFrame.Shape.HLine)
         sep.setStyleSheet(f"color: {C.BORDER}; margin: 1px 0;")
         lay.addWidget(sep)
@@ -3434,7 +3435,7 @@ class RemoteKeyOverlay(QWidget):
         self._qr_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._qr_label.setFixedSize(176, 176)
         self._qr_label.setStyleSheet(
-            "background: white; border-radius: 10px; padding: 4px;"
+            f"background: white; border: 2px solid {C.PRI_DIM}; border-radius: 10px; padding: 4px;"
         )
         qr_row = QHBoxLayout()
         qr_row.addStretch()
@@ -3462,11 +3463,11 @@ class RemoteKeyOverlay(QWidget):
         lay.addWidget(self._url_lbl)
 
         self._key_lbl = QLabel(key)
-        self._key_lbl.setFont(QFont("Courier New", 28, QFont.Weight.Bold))
+        self._key_lbl.setFont(QFont("Courier New", 26, QFont.Weight.Bold))
         self._key_lbl.setStyleSheet(f"""
-            color: {C.ACC};
-            background: {C.PANEL2};
-            border: 1px solid {C.BORDER_B};
+            color: {C.PRI};
+            background: #140408;
+            border: 1.5px solid {C.PRI_DIM};
             border-radius: 8px;
             padding: 6px 4px;
             letter-spacing: 10px;
@@ -3487,10 +3488,11 @@ class RemoteKeyOverlay(QWidget):
         new_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         new_btn.setStyleSheet(f"""
             QPushButton {{
-                background: {C.PANEL}; color: {C.PRI};
+                background: #15060b; color: {C.PRI};
                 border: 1px solid {C.PRI_DIM}; border-radius: 5px;
+                letter-spacing: 1px;
             }}
-            QPushButton:hover {{ background: {C.PRI_GHO}; border: 1px solid {C.PRI}; }}
+            QPushButton:hover {{ background: {C.PRI_GHO}; border: 1px solid {C.PRI}; color: #ffffff; }}
         """)
         new_btn.clicked.connect(self._refresh_key)
         btn_row.addWidget(new_btn)
@@ -3501,10 +3503,11 @@ class RemoteKeyOverlay(QWidget):
         close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         close_btn.setStyleSheet(f"""
             QPushButton {{
-                background: transparent; color: {C.TEXT_MED};
+                background: #0d0f15; color: {C.TEXT_MED};
                 border: 1px solid {C.BORDER}; border-radius: 5px;
+                letter-spacing: 1px;
             }}
-            QPushButton:hover {{ color: {C.TEXT}; border: 1px solid {C.BORDER_B}; }}
+            QPushButton:hover {{ color: {C.TEXT}; border: 1px solid {C.BORDER_B}; background: #181c28; }}
         """)
         close_btn.clicked.connect(self._do_close)
         btn_row.addWidget(close_btn)
@@ -3578,7 +3581,7 @@ class RemoteKeyOverlay(QWidget):
         self._qr_label.setStyleSheet(
             "color: #00ff88; background: #001a0d; border-radius: 10px;"
         )
-        self._timer_lbl.setText("Phone connected — JARVIS ready")
+        self._timer_lbl.setText("DEVICE UPLINK ACTIVE — ULTRON READY")
         self._timer_lbl.setStyleSheet(f"color: {C.GREEN}; background: transparent;")
 
     def _refresh_key(self):

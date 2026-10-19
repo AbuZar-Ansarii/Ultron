@@ -2081,7 +2081,7 @@ class JarvisLive:
                                 self._session_log.append(f"{self._asst_name}: {full_out}")
                                 if self._dashboard:
                                     asyncio.create_task(self._dashboard.broadcast({
-                                        "type": "log", "speaker": "jarvis",
+                                        "type": "log", "speaker": "ultron",
                                         "text": full_out,
                                         "ts": datetime.now().isoformat(),
                                     }))

@@ -1,5 +1,5 @@
 """
-dashboard/server.py — JARVIS Local HTTP Dashboard
+dashboard/server.py — Ultron Local HTTP Dashboard
 
 Plain HTTP on port 8000 (no SSL warnings, no firewall issues).
 Security at the application layer: AES-256-CBC with session-key-derived key.
@@ -44,8 +44,8 @@ MAX_UPLOAD_MB = 500
 def _make_uploads_dir() -> Path:
     """Return (and create) the cross-platform uploads folder."""
     for candidate in [
-        Path.home() / "Downloads" / "JARVIS Uploads",
-        Path.home() / "Documents" / "JARVIS Uploads",
+        Path.home() / "Downloads" / "Ultron Uploads",
+        Path.home() / "Documents" / "Ultron Uploads",
         BASE_DIR / "uploads",
     ]:
         try:
@@ -70,7 +70,7 @@ _KEY_CHARS = [c for c in (string.ascii_uppercase + string.digits)
               if c not in ('O', 'I', 'L', '0', '1')]
 
 # ── AES-256-CBC ───────────────────────────────────────────────────────────────
-_AES_SALT = b'JARVIS-DASHBOARD-v1'
+_AES_SALT = b'ULTRON-DASHBOARD-v1'
 
 
 def _derive_key(session_key: str) -> bytes:
@@ -112,8 +112,8 @@ def _ensure_network_access(port: int) -> None:
     if sys.platform == "win32":
         import ctypes, time
 
-        port_rule = f"JARVIS Dashboard Port {port}"
-        prog_rule  = "JARVIS Dashboard Python"
+        port_rule = f"Ultron Dashboard Port {port}"
+        prog_rule  = "Ultron Dashboard Python"
         py_exe     = sys.executable
 
         def _netsh_rule_exists(name: str) -> bool:
@@ -169,7 +169,7 @@ def _ensure_network_access(port: int) -> None:
             )
 
         bat_body = "\r\n".join(bat_lines) + "\r\n"
-        fd, bat_path = tempfile.mkstemp(suffix=".bat", prefix="jarvis_fw_")
+        fd, bat_path = tempfile.mkstemp(suffix=".bat", prefix="ultron_fw_")
         try:
             os.write(fd, bat_body.encode("mbcs"))   # Windows cmd.exe expects ANSI
             os.close(fd)
@@ -374,8 +374,12 @@ def _ensure_certs() -> bool:
     plain HTTP, which still works — the QR code simply encodes http:// instead.
     """
     certs = BASE_DIR / "config" / "certs"
-    key_p = certs / "jarvis.key"
-    crt_p = certs / "jarvis.crt"
+    key_p = certs / "ultron.key"
+    crt_p = certs / "ultron.crt"
+    if not (key_p.exists() and crt_p.exists()):
+        if (certs / "jarvis.key").exists() and (certs / "jarvis.crt").exists():
+            key_p = certs / "jarvis.key"
+            crt_p = certs / "jarvis.crt"
     if key_p.exists() and crt_p.exists():
         return True
 
@@ -393,11 +397,13 @@ def _ensure_certs() -> bool:
 
     try:
         certs.mkdir(parents=True, exist_ok=True)
+        key_p = certs / "ultron.key"
+        crt_p = certs / "ultron.crt"
         key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 
         who = x509.Name([
-            x509.NameAttribute(NameOID.COMMON_NAME, "JARVIS Dashboard"),
-            x509.NameAttribute(NameOID.ORGANIZATION_NAME, "JARVIS"),
+            x509.NameAttribute(NameOID.COMMON_NAME, "Ultron Dashboard"),
+            x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Ultron"),
         ])
 
         # The SAN has to cover every address the phone might use: the LAN IP the
@@ -485,7 +491,8 @@ class DashboardServer:
     @staticmethod
     def _ssl_enabled() -> bool:
         certs = BASE_DIR / "config" / "certs"
-        return (certs / "jarvis.key").exists() and (certs / "jarvis.crt").exists()
+        return ((certs / "ultron.key").exists() and (certs / "ultron.crt").exists()) or \
+               ((certs / "jarvis.key").exists() and (certs / "jarvis.crt").exists())
 
     def get_url(self) -> str:
         proto = "https" if self._ssl_enabled() else "http"
@@ -617,20 +624,51 @@ class DashboardServer:
             ))
 
             return HTMLResponse(f"""<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width">
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Ultron Uplink</title>
 <style>
-  body{{background:#07090f;color:#dde3ed;font-family:sans-serif;
-       display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center}}
-  p{{color:#5e6a7e;font-size:14px}}
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  body {{
+    background: #07080e; color: #f0f4fc;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', monospace;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100vh; margin: 0; text-align: center; overflow: hidden;
+  }}
+  .core {{
+    width: 68px; height: 68px; border-radius: 50%;
+    border: 2px solid rgba(255, 31, 67, 0.4);
+    box-shadow: 0 0 25px rgba(255, 31, 67, 0.35);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px; position: relative;
+    animation: pulse 1.6s ease-in-out infinite;
+  }}
+  .core::before {{
+    content: ''; position: absolute; inset: -7px; border-radius: 50%;
+    border: 1.5px dashed rgba(255, 31, 67, 0.6);
+    animation: rotate 6s linear infinite;
+  }}
+  .eye {{
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #ff1f43; box-shadow: 0 0 16px #ff1f43;
+  }}
+  h1 {{ font-size: 15px; letter-spacing: 5px; color: #ff1f43; margin-bottom: 6px; font-weight: 700; }}
+  p {{ color: #7a889b; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; font-family: monospace; }}
+  @keyframes rotate {{ 100% {{ transform: rotate(360deg); }} }}
+  @keyframes pulse {{ 0%, 100% {{ transform: scale(1); }} 50% {{ transform: scale(1.08); }} }}
 </style></head>
 <body>
+<div class="core"><div class="eye"></div></div>
+<h1>ULTRON PRIME</h1>
+<p>SYNCHRONIZING NEURAL UPLINK…</p>
 <script>
+  sessionStorage.setItem('ultron_token','{tok}');
+  sessionStorage.setItem('ultron_key','{key}');
+  localStorage.setItem('ultron_device_token','{dev_tok}');
   sessionStorage.setItem('jarvis_token','{tok}');
   sessionStorage.setItem('jarvis_key','{key}');
   localStorage.setItem('jarvis_device_token','{dev_tok}');
-  setTimeout(function(){{location.replace('/')}},400);
+  setTimeout(function(){{location.replace('/')}}, 350);
 </script>
-<p>Connecting to Ultron…</p>
 </body></html>""")
 
         @app.post("/api/device-login")
@@ -843,8 +881,9 @@ class DashboardServer:
         """Second HTTPS server on PORT+1 sharing the same app and in-memory state.
         Chrome HTTPS-upgrades any bare IP:PORT the user types, so this port also needs TLS.
         User types IP:8001 → Chrome tries https → self-signed cert warning → accept once → done."""
-        ssl_key  = BASE_DIR / "config" / "certs" / "jarvis.key"
-        ssl_cert = BASE_DIR / "config" / "certs" / "jarvis.crt"
+        certs = BASE_DIR / "config" / "certs"
+        ssl_key  = certs / "ultron.key" if (certs / "ultron.key").exists() else certs / "jarvis.key"
+        ssl_cert = certs / "ultron.crt" if (certs / "ultron.crt").exists() else certs / "jarvis.crt"
         asyncio.get_event_loop().run_in_executor(None, _ensure_network_access, PORT + 1)
         cfg = uvicorn.Config(
             self.app, host="0.0.0.0", port=PORT + 1, log_level="warning",
@@ -870,8 +909,9 @@ class DashboardServer:
         _ensure_certs()
 
         use_ssl  = self._ssl_enabled()
-        ssl_key  = BASE_DIR / "config" / "certs" / "jarvis.key"
-        ssl_cert = BASE_DIR / "config" / "certs" / "jarvis.crt"
+        certs    = BASE_DIR / "config" / "certs"
+        ssl_key  = certs / "ultron.key" if (certs / "ultron.key").exists() else certs / "jarvis.key"
+        ssl_cert = certs / "ultron.crt" if (certs / "ultron.crt").exists() else certs / "jarvis.crt"
 
         if use_ssl:
             asyncio.create_task(self._serve_alias())
