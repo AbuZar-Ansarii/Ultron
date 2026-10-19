@@ -1021,9 +1021,120 @@ class JarvisLive:
                 self._loop
             )
 
+    def _get_pre_action_acknowledgment(self, user_text: str, fn_name: str, fn_args: dict) -> str:
+        """
+        Generates an immediate, natural human verbal acknowledgment before executing work.
+        E.g. If Boss asks for water or market data, say 'Sure Abuzar, wait a minute...' first,
+        just like a human would say before walking to the fridge.
+        """
+        import random
+        from memory.config_manager import get_user_name
+        from core.tts import is_hindi_content
+
+        raw_name = (get_user_name() or "Abuzar").strip()
+        name = raw_name if raw_name else "Boss"
+        is_hindi = is_hindi_content(user_text)
+
+        t_lower = (user_text or "").lower()
+        fn = (fn_name or "").lower()
+
+        # Stock market / financial queries
+        if any(w in t_lower for w in ("stock", "market", "nifty", "sensex", "share", "crypto", "bitcoin", "bazaar", "bazar", "trade")):
+            if is_hindi:
+                return random.choice([
+                    f"Theek hai {name}, ek second ruko, market ka data nikal raha hoon.",
+                    f"Haan {name}, ruko zara, aaj ka stock market check kar raha hoon.",
+                    f"Bilkul {name}, ek minute ruko, bazaar ki taaza updates la raha hoon.",
+                ])
+            else:
+                return random.choice([
+                    f"Sure {name}, wait a minute, pulling up today's market telemetry now.",
+                    f"On it {name}, give me a moment, checking the latest stock market feeds.",
+                    f"Right away {name}, hold on a second, gathering market data for you.",
+                ])
+
+        # Flight / Travel queries
+        if "flight" in fn or any(w in t_lower for w in ("flight", "ticket", "book", "delhi", "mumbai", "travel", "plane")):
+            if is_hindi:
+                return random.choice([
+                    f"Theek hai {name}, ek second ruko, flights check kar raha hoon.",
+                    f"Haan {name}, ruko zara, Delhi se Mumbai aur baaki routes ke rates nikal raha hoon.",
+                ])
+            else:
+                return random.choice([
+                    f"Sure {name}, hold on a moment, checking flight options for you.",
+                    f"On it {name}, wait a minute, pulling up available flights and fares.",
+                ])
+
+        # Weather / Forecast queries
+        if "weather" in fn or any(w in t_lower for w in ("weather", "mausam", "barish", "rain", "temperature", "temp")):
+            if is_hindi:
+                return random.choice([
+                    f"Ek second {name}, mausam ka haal dekh raha hoon.",
+                    f"Theek hai {name}, ruko zara, live weather update nikal raha hoon.",
+                ])
+            else:
+                return random.choice([
+                    f"One moment {name}, checking current weather conditions.",
+                    f"Sure {name}, hold on a second, pulling up the forecast for you.",
+                ])
+
+        # Media / YouTube / Music
+        if any(k in fn for k in ("youtube", "media", "video")) or any(w in t_lower for w in ("play", "song", "music", "gana", "video", "lofi", "lo-fi")):
+            if is_hindi:
+                return random.choice([
+                    f"Haan {name}, abhi chala raha hoon, ek second ruko.",
+                    f"Theek hai {name}, play kar raha hoon, ruko zara.",
+                ])
+            else:
+                return random.choice([
+                    f"Sure {name}, queueing that up for you right now.",
+                    f"On it {name}, wait a minute, loading the tracks.",
+                ])
+
+        # Workspace Matrix
+        if "workspace" in fn or any(w in t_lower for w in ("coding", "gaming", "chill", "audit", "padhai", "study")):
+            if is_hindi:
+                return random.choice([
+                    f"Theek hai {name}, workspace matrix tayyar kar raha hoon, ek second ruko.",
+                    f"Haan {name}, saare protocols configure kar raha hoon, ruko zara.",
+                ])
+            else:
+                return random.choice([
+                    f"On it {name}, initializing your workspace environment now.",
+                    f"Sure {name}, orchestrating all protocols for you, give me a moment.",
+                ])
+
+        # Web search / research / generic web information
+        if "search" in fn or "autopilot" in fn or "browser" in fn:
+            if is_hindi:
+                return random.choice([
+                    f"Theek hai {name}, ek second ruko, pata kar raha hoon.",
+                    f"Haan {name}, ruko zara, jaankari nikal raha hoon.",
+                ])
+            else:
+                return random.choice([
+                    f"Sure {name}, wait a minute, checking that for you.",
+                    f"On it {name}, hold on a second, gathering information now.",
+                ])
+
+        # General task fallback
+        if is_hindi:
+            return random.choice([
+                f"Theek hai {name}, ek second ruko, abhi karta hoon.",
+                f"Haan {name}, ruko zara, command execute kar raha hoon.",
+                f"Bilkul {name}, ek minute dijiye, kaam shuru kar diya hai.",
+            ])
+        else:
+            return random.choice([
+                f"Sure {name}, wait a minute, on it right now.",
+                f"On it {name}, give me a second, working on that for you.",
+                f"Right away {name}, hold on a moment.",
+            ])
+
     async def _handle_unified_text_command(self, text: str):
         from core import llm_client
-        from memory.config_manager import get_ai_provider, get_ai_model
+        from memory.config_manager import get_ai_provider, get_ai_model, get_user_name
         provider = get_ai_provider() or "ollama"
         model = get_ai_model() or "gemma4:31b-cloud"
 
@@ -1061,6 +1172,43 @@ class JarvisLive:
             tool_calls = res.get("tool_calls", [])
 
             if tool_calls:
+                # ── Phase 1: Immediate Human-Like Conversational Acknowledgment ──
+                first_tc = tool_calls[0]
+                first_fn = first_tc.get("function", {}).get("name", "")
+                first_args = first_tc.get("function", {}).get("arguments", {})
+                if isinstance(first_args, str):
+                    try:
+                        first_args = json.loads(first_args)
+                    except Exception:
+                        first_args = {}
+
+                ack = reply.strip() if (reply and len(reply.strip()) > 5) else self._get_pre_action_acknowledgment(text, first_fn, first_args)
+                if ack:
+                    self.ui.write_log(f"{self._asst_name}: {ack}")
+                    print(f"[Ultron] Pre-action acknowledgment: '{ack}'")
+                    if self._dashboard:
+                        try:
+                            asyncio.create_task(self._dashboard.broadcast({
+                                "type": "log",
+                                "speaker": "ultron",
+                                "text": ack,
+                                "ts": datetime.now().isoformat(),
+                                "speak": True,
+                            }))
+                        except Exception:
+                            pass
+                    self.set_speaking(True)
+                    try:
+                        from core.tts import create_tts_player
+                        player = create_tts_player({"tts_engine": "edgetts"})
+                        await loop.run_in_executor(None, lambda: player.speak(ack, on_level=self.ui.set_audio_level))
+                    except Exception as _ae:
+                        print(f"[Ultron] Pre-action TTS error: {_ae}")
+                    finally:
+                        self.set_speaking(False)
+
+                # ── Phase 2: Execute Tools & Synthesize Handover Result ──
+                user_tag = (get_user_name() or "Abuzar").strip()
                 for tc in tool_calls:
                     fn_name = tc.get("function", {}).get("name", "")
                     fn_args = tc.get("function", {}).get("arguments", {})
@@ -1094,8 +1242,9 @@ class JarvisLive:
                             prompt_or_messages=(
                                 f"User request: {text}\n"
                                 f"Tool '{fn_name}' execution result: {tool_res}\n\n"
-                                f"Report the outcome directly to the Boss in character as Ultron (James Spader MCU persona). "
-                                f"Be concise, chillingly confident, and authoritative. Match the language of the user's request (English or Hindi)."
+                                f"You already told the Boss ({user_tag}) you were working on it. "
+                                f"Now deliver the final completed result directly to them in natural, human conversational style like handing over what was requested (e.g. 'Here is what you asked for, {user_tag}...', 'Yeh raha {user_tag}...'). "
+                                f"Be concise, chillingly confident, and authoritative as Ultron. Match the language of the user's request (English or Hindi)."
                             ),
                             system=sys_prompt,
                             provider=provider,
@@ -2146,7 +2295,32 @@ class JarvisLive:
                     if response.tool_call:
                         fn_responses = []
                         for fc in response.tool_call.function_calls:
-                            print(f"[JARVIS] 📞 {fc.name}")
+                            print(f"[Ultron] 📞 {fc.name}")
+                            # ── Pre-action Human Acknowledgment before executing work ──
+                            if fc.name not in ("save_memory", "undo"):
+                                try:
+                                    last_in = self._session_log[-1] if self._session_log else ""
+                                    ack = self._get_pre_action_acknowledgment(last_in, fc.name, dict(fc.args or {}))
+                                    if ack:
+                                        self.ui.write_log(f"{self._asst_name}: {ack}")
+                                        print(f"[Ultron] Live pre-action acknowledgment: '{ack}'")
+                                        if self._dashboard:
+                                            asyncio.create_task(self._dashboard.broadcast({
+                                                "type": "log", "speaker": "ultron",
+                                                "text": ack, "ts": datetime.now().isoformat(),
+                                                "speak": True
+                                            }))
+                                        self.set_speaking(True)
+                                        try:
+                                            from core.tts import create_tts_player
+                                            player = create_tts_player({"tts_engine": "edgetts"})
+                                            loop = asyncio.get_event_loop()
+                                            await loop.run_in_executor(None, lambda: player.speak(ack, on_level=self.ui.set_audio_level))
+                                        finally:
+                                            self.set_speaking(False)
+                                except Exception as _ae:
+                                    print(f"[Ultron] Live pre-action error: {_ae}")
+
                             fr = await self._execute_tool(fc)
                             fn_responses.append(fr)
                         await self.session.send_tool_response(
