@@ -89,6 +89,33 @@ def _send_telegram_photo(photo_path: Path, caption: str) -> bool:
         return False
 
 
+def _lock_workstation() -> bool:
+    """Instantly locks the Windows workstation to defend the perimeter."""
+    if sys.platform == "win32":
+        try:
+            import ctypes
+            ctypes.windll.user32.LockWorkStation()
+            print("[Sentry] 🔒 [LOCKDOWN] Workstation locked via Windows user32.LockWorkStation()")
+            return True
+        except Exception as e:
+            print(f"[Sentry] Workstation lock failed: {e}")
+    return False
+
+
+def _broadcast_dashboard_breach(reason: str, photo_name: str) -> None:
+    """Transmits instant breach telemetry & vibration alert to connected mobile phones."""
+    try:
+        from dashboard.server import broadcast_breach
+        broadcast_breach({
+            "reason": reason,
+            "photo": photo_name,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        })
+        print(f"[Sentry] 📱 [TELEPATHY] Intrusion alert transmitted to connected mobile devices.")
+    except Exception as e:
+        print(f"[Sentry] Dashboard breach broadcast error: {e}")
+
+
 def _speak_alert(player=None) -> None:
     """Speak the imposing Ultron intruder warning."""
     warning = "You are interfering with things you cannot begin to understand. Step away from this workstation, or I will deal with you myself."
@@ -219,12 +246,19 @@ def _sentry_worker(player=None):
             # Voice Alarm
             _speak_alert(player)
 
+            # Instant Workstation Lockdown
+            _lock_workstation()
+
+            # Mobile Telepathy Uplink Alert
+            _broadcast_dashboard_breach(breach_reason, photo_name)
+
             # Telegram Alert
             if photo_path.exists():
                 caption = (
                     f"ULTRON SENTRY PROTOCOL ALERT\n"
                     f"Workstation perimeter breach detected!\n"
                     f"Reason: {breach_reason}\n"
+                    f"Action: Workstation locked via Windows API\n"
                     f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
                     f"Snapshot: {photo_name}"
                 )
@@ -305,6 +339,15 @@ def sentry_gallery() -> str:
     return "\n".join(lines)
 
 
+def instant_lockdown(player=None) -> str:
+    """Immediate tactical perimeter lockdown."""
+    _lock_workstation()
+    _broadcast_dashboard_breach("Manual Tactical Lockdown Triggered", "lockdown_manual.jpg")
+    _speak_alert(player)
+    activate_sentry(player)
+    return "Tactical lockdown engaged. Workstation locked down, perimeter alarms active, and Sentry Protocol armed. Step away."
+
+
 # ── Unified Dispatcher ───────────────────────────────────────────────────────
 
 def sentry_protocol(
@@ -324,12 +367,14 @@ def sentry_protocol(
             return activate_sentry(player)
         elif action in ("deactivate", "disarm", "stop", "disable"):
             return deactivate_sentry()
+        elif action in ("lockdown", "lock", "lock_pc", "intruder_lockdown"):
+            return instant_lockdown(player)
         elif action in ("status", "check", "info"):
             return sentry_status()
         elif action in ("gallery", "snapshots", "logs", "breaches"):
             return sentry_gallery()
         else:
-            return f"Unknown Sentry action: '{action}'. Available: activate, deactivate, status, gallery."
+            return f"Unknown Sentry action: '{action}'. Available: activate, deactivate, lockdown, status, gallery."
     except Exception as e:
         return f"Sentry Protocol error ({action}): {e}"
 
@@ -337,13 +382,19 @@ def sentry_protocol(
 # ── Tool declaration (auto-discovered by core/action_loader.py) ──────────────
 TOOL = {
     "name": "sentry_protocol",
-    "description": "Workstation defense & surveillance protocol: autonomously monitors webcam for human presence/intruders or unauthorized workstation access when the user is away, captures evidence snapshots to Pictures/Ultron_Sentry/, speaks an imposing Ultron intruder warning, and dispatches instant Telegram alerts.",
+    "description": (
+        "Workstation Autonomous Sentry & Perimeter Defense Protocol. Autonomously monitors webcam and physical inputs "
+        "for human presence/intruders when the user is away, locks down the Windows operating system (user32.LockWorkStation), "
+        "captures timestamped intruder snapshots to Pictures/Ultron_Sentry/, delivers a chilling Ultron vocal warning, "
+        "and dispatches instant Telegram & Mobile Dashboard breach alerts. "
+        "Actions: activate (arm surveillance), deactivate (disarm), lockdown (immediate workstation lock + arm sentry), status, gallery."
+    ),
     "parameters": {
         "type": "OBJECT",
         "properties": {
             "action": {
                 "type": "STRING",
-                "description": "activate (arm sentry mode) | deactivate (disarm) | status (check security state) | gallery (view intruder captures)"
+                "description": "activate (arm sentry mode) | deactivate (disarm) | lockdown (instant Windows lock & arm) | status (check security state) | gallery (view intruder captures)"
             }
         },
         "required": [

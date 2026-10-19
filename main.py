@@ -671,6 +671,36 @@ class JarvisLive:
         self._telegram_bot = init_telegram_bot(executor=self._execute_telegram_command)
         self.ui.on_telegram_update = self._on_telegram_config_update
 
+        # ── Proactive Screen Mind-Reader Hotkey (Ctrl+Alt+S) ─────────────────
+        self._screen_hotkey = None
+        try:
+            from core.hotkey import GlobalHotkeyTrigger
+            self._screen_hotkey = GlobalHotkeyTrigger(
+                chord=("ctrl", "alt", "s"),
+                on_trigger=self._on_screen_mind_read_hotkey
+            )
+            self._screen_hotkey.start()
+        except Exception as e:
+            print(f"[Ultron] Screen Mind-Reader hotkey hook unavailable: {e}")
+
+    def _on_screen_mind_read_hotkey(self) -> None:
+        """Triggered globally via Ctrl+Alt+S to proactively analyze the active screen."""
+        print("[Ultron] 🧠 Global hotkey Ctrl+Alt+S pressed: Omni-Vision Screen Mind-Reader engaged.")
+        self.ui.write_log("SYS: Omni-Vision Screen Mind-Reader engaged via [Ctrl+Alt+S].")
+        import threading
+        def _execute_mind_reader():
+            try:
+                from actions.screen_processor import screen_mind_read
+                res = screen_mind_read(
+                    prompt="Analyze active workstation screen. Diagnose any coding faults or brief on visible content.",
+                    player=self.ui,
+                    speak=self.speak,
+                )
+                print(f"[Ultron] Screen Mind-Reader completed: {str(res)[:100]}")
+            except Exception as ex:
+                print(f"[Ultron] Screen Mind-Reader fault: {ex}")
+        threading.Thread(target=_execute_mind_reader, daemon=True).start()
+
     def _build_full_system_prompt(self) -> tuple[str, list]:
         """
         Builds the unified system instruction containing:
@@ -1524,6 +1554,29 @@ class JarvisLive:
             "swarm": "drone_swarm",
             "sub_ultron": "drone_swarm",
             "sub_agent": "drone_swarm",
+            "parallel_swarm": "drone_swarm",
+            "multi_agent": "drone_swarm",
+            "swarm_workers": "drone_swarm",
+            "flight": "web_autopilot",
+            "flights": "web_autopilot",
+            "book_flight": "web_autopilot",
+            "flight_search": "web_autopilot",
+            "flight_booking": "web_autopilot",
+            "flight_finder": "web_autopilot",
+            "autopilot_task": "web_autopilot",
+            "lockdown": "sentry_protocol",
+            "sentry_lockdown": "sentry_protocol",
+            "perimeter_defense": "sentry_protocol",
+            "screen_mind_read": "screen_processor",
+            "mind_read": "screen_processor",
+            "screen_read": "screen_processor",
+            "omni_vision": "screen_processor",
+            "screen_mind": "screen_processor",
+            "screen_triage": "optical_hud",
+            "omni_telepathy": "omni_telepathy",
+            "telepathy": "omni_telepathy",
+            "phone_bridge": "omni_telepathy",
+            "phone_telepathy": "omni_telepathy",
         }
         target_name = alias_map.get(clean_name, clean_name)
         if not (hasattr(self, "_action_registry") and self._action_registry.has(target_name)):
@@ -1962,14 +2015,13 @@ class JarvisLive:
                         "response": None, "session_memory": None}
                 r = await loop.run_in_executor(None, lambda: self._action_registry.run(name, args, _ctx))
                 result = r or "Done."
-                # web_search: mirror results to the on-screen content panel
-                if (name == "web_search" and r
-                        and not r.startswith("No results")
-                        and not r.startswith("Search failed")):
-                    _mode  = args.get("mode", "search")
-                    _query = args.get("query") or ", ".join(args.get("items", []))
-                    _label = f"{_mode.upper()} — {_query[:38]}" if _query else _mode.upper()
-                    self.ui.show_content(_label, r)
+                # Mirror intelligence results to the on-screen content panel
+                if (name in ("web_search", "web_autopilot", "drone_swarm", "omni_telepathy", "screen_mind_read", "sentry_protocol")
+                        and r
+                        and not str(r).startswith("No results")
+                        and not str(r).startswith("Search failed")):
+                    _label = f"{name.upper().replace('_', ' ')}"
+                    self.ui.show_content(_label, str(r))
 
             else:
                 if self._plugin_registry.has(name):

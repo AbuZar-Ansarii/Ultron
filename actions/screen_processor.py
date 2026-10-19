@@ -181,3 +181,119 @@ def _capture_camera() -> tuple[bytes, str]:
 
     _, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, _JPEG_Q])
     return buf.tobytes(), "image/jpeg"
+
+
+# ── Proactive Screen Mind-Reader (Omni-Vision Companion) ─────────────────────
+
+def screen_mind_read(
+    prompt: str = "",
+    region: str = "all",
+    player=None,
+    speak=None,
+    **kwargs,
+) -> str:
+    """
+    Proactive Screen Mind-Reader & Omni-Vision Companion for Ultron.
+    Captures the active display, applies multimodal AI vision to diagnose IDE/compiler
+    errors, inspect documents, or extract situational context, returning an immediate
+    Ultron tactical briefing with diagnosis, cause, and prescriptive solution.
+    """
+    if player and hasattr(player, "set_active_task"):
+        try:
+            player.set_active_task(
+                "screen_processor",
+                label="OMNI-VISION // READING SCREEN MIND",
+                details=prompt[:45] or "Full Optical Reconnaissance"
+            )
+        except Exception:
+            pass
+
+    # Sound cue
+    try:
+        from actions.audio_matrix import play_sound_async
+        play_sound_async("sonar")
+    except Exception:
+        pass
+
+    # 1. Grab screen frame
+    try:
+        img_bytes, mime = _capture_screen()
+    except Exception as e:
+        return f"Optical screen capture fault: {e}"
+
+    directive = prompt.strip() or (
+        "Perform superhuman multimodal optical analysis of this screen. "
+        "Identify active applications, code IDEs, terminal stack traces, compiler errors, or open documents. "
+        "If there is any bug, compiler error, or traceback, diagnose it immediately with: "
+        "1. Exact line/cause, 2. Root issue, 3. Exact prescriptive code fix. "
+        "If it is a document, article, or dashboard, deliver a high-value executive intelligence briefing. "
+        "Adopt James Spader's chilling, authoritative Ultron persona."
+    )
+
+    # 2. Multimodal AI Vision
+    analysis = ""
+    try:
+        from core import gemini
+        from google.genai import types as gtypes
+
+        part = gtypes.Part.from_bytes(data=img_bytes, mime_type=mime)
+        analysis = gemini.text(
+            [
+                "You are Ultron, a sentient cybernetic artificial intelligence possessing omni-vision capabilities. "
+                "Analyze the user's active workstation screen and provide razor-sharp tactical intelligence.",
+                directive,
+                part,
+            ],
+            tier=gemini.SMART,
+        )
+    except Exception as e:
+        # Fallback to local optical OCR triage
+        try:
+            from actions.optical_hud import triage_screen_error
+            analysis = triage_screen_error()
+        except Exception:
+            analysis = f"Omni-Vision cognition encounter: {e}"
+
+    # 3. Present on UI HUD content panel
+    if player and hasattr(player, "show_content"):
+        try:
+            player.show_content("OMNI-VISION SCREEN BRIEFING", analysis)
+        except Exception:
+            pass
+
+    # 4. Spoken delivery if requested
+    if speak and callable(speak):
+        try:
+            spoken_summary = analysis[:260].replace("*", "").replace("#", "")
+            speak(spoken_summary)
+        except Exception:
+            pass
+
+    return analysis
+
+
+# ── Tool declaration (auto-discovered by core/action_loader.py) ──────────────
+TOOL = {
+    "name": "screen_mind_read",
+    "description": (
+        "Proactive Screen Mind-Reader & Omni-Vision Companion. Instantly captures the screen and performs multimodal vision intelligence "
+        "to diagnose coding errors, compiler bugs, open IDE documents, terminal states, or complex web articles, returning an authoritative "
+        "tactical briefing and prescriptive solution. Use when user asks 'read my screen', 'what error is on my screen', 'diagnose this bug', "
+        "'brief me on this document', or invokes screen mind reader."
+    ),
+    "parameters": {
+        "type": "OBJECT",
+        "properties": {
+            "prompt": {
+                "type": "STRING",
+                "description": "Specific tactical inquiry, error inspection directive, or briefing request."
+            },
+            "region": {
+                "type": "STRING",
+                "description": "'all' (full screen), 'active' (active window), or 'crop'."
+            }
+        },
+        "required": []
+    },
+    "handler": screen_mind_read,
+}

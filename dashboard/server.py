@@ -457,11 +457,35 @@ def _read(name: str) -> str:
     return (STATIC_DIR / name).read_text(encoding="utf-8")
 
 
+# ── Dashboard Global Instance & Helpers ─────────────────────────────────────
+_GLOBAL_DASHBOARD: "DashboardServer" | None = None
+
+def get_dashboard() -> "DashboardServer" | None:
+    """Returns singleton instance of DashboardServer if running."""
+    return _GLOBAL_DASHBOARD
+
+def broadcast_breach(breach_data: dict) -> None:
+    """Broadcasts perimeter breach alert across all connected mobile dashboards."""
+    d = get_dashboard()
+    if d and d._clients:
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                asyncio.run_coroutine_threadsafe(
+                    d.broadcast({"type": "breach_alert", **breach_data}),
+                    loop
+                )
+        except Exception:
+            pass
+
+
 # ── DashboardServer ───────────────────────────────────────────────────────────
 
 class DashboardServer:
 
     def __init__(self):
+        global _GLOBAL_DASHBOARD
+        _GLOBAL_DASHBOARD = self
         self._ip                          = _local_ip()
         self._tokens: set[str]            = set()
         self._token_keys: dict[str, str]  = {}   # auth_token → session_key
@@ -927,6 +951,185 @@ class DashboardServer:
             if not path.exists() or not path.is_file():
                 return JSONResponse({"error": "Not found"}, status_code=404)
             return FileResponse(str(path), filename=safe)
+
+        # ── Omni-Link Telepathy (Phone ↔ PC Bridge) Endpoints ───────────────
+
+        @app.post("/api/phone-vision")
+        async def phone_vision_ep(req: Request):
+            """Multimodal physical vision: receives phone camera snapshot, inspects with Gemini, speaks and reports back."""
+            if not _auth(req):
+                return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+            prompt = "Analyze this image captured from the phone camera. Identify key objects, text, context, or physical components, and deliver an authoritative Ultron tactical briefing."
+            raw_bytes: bytes | None = None
+            content_type = req.headers.get("content-type", "")
+
+            try:
+                if "multipart/form-data" in content_type and _UPLOAD_OK:
+                    form = await req.form()
+                    upload = form.get("file")
+                    if upload and hasattr(upload, "read"):
+                        raw_bytes = await upload.read()
+                    form_prompt = form.get("prompt")
+                    if form_prompt:
+                        prompt = str(form_prompt).strip()
+                else:
+                    body = await req.json()
+                    img_data = body.get("image", "")
+                    if "," in img_data:
+                        img_data = img_data.split(",", 1)[1]
+                    if img_data:
+                        raw_bytes = base64.b64decode(img_data)
+                    if body.get("prompt"):
+                        prompt = str(body["prompt"]).strip()
+            except Exception as e:
+                return JSONResponse({"error": f"Payload parse error: {e}"}, status_code=400)
+
+            if not raw_bytes:
+                return JSONResponse({"error": "No image data provided"}, status_code=400)
+
+            # Compress & save to uploads
+            ts = int(time.time())
+            filename = f"phone_vision_{ts}.jpg"
+            dest = self._uploads_dir / filename
+            try:
+                from PIL import Image
+                import io
+                img = Image.open(io.BytesIO(raw_bytes)).convert("RGB")
+                img.thumbnail((1280, 720), Image.BILINEAR)
+                buf = io.BytesIO()
+                img.save(buf, format="JPEG", quality=82)
+                compressed_bytes = buf.getvalue()
+                dest.write_bytes(compressed_bytes)
+            except Exception:
+                dest.write_bytes(raw_bytes)
+                compressed_bytes = raw_bytes
+
+            # Multimodal Vision Analysis via Gemini
+            analysis = "Visual telemetry acquired. Analysis pending."
+            try:
+                from core import gemini
+                from google.genai import types as gtypes
+                part = gtypes.Part.from_bytes(data=compressed_bytes, mime_type="image/jpeg")
+                analysis = gemini.text(
+                    [
+                        f"You are Ultron. The Boss has captured a physical object or scene with his phone camera. "
+                        f"Directive: {prompt}\n"
+                        f"Provide a razor-sharp, insightful, and cinematic tactical observation. Speak in James Spader Ultron persona.",
+                        part,
+                    ],
+                    tier=gemini.SMART,
+                )
+            except Exception as e:
+                analysis = f"Optical cognition fault: {e}"
+
+            # Broadcast result to phone clients & activity stream
+            asyncio.create_task(self.broadcast({
+                "type": "phone_vision_result",
+                "prompt": prompt,
+                "analysis": analysis,
+                "url": f"/uploads/{filename}",
+                "timestamp": time.strftime("%H:%M:%S"),
+            }))
+
+            # Speak briefing aloud if possible
+            try:
+                from core.tts import create_tts_player
+                p = create_tts_player({"tts_engine": "edgetts"})
+                import threading
+                spoken_brief = analysis[:280].replace("*", "").replace("#", "")
+                threading.Thread(target=lambda: p.speak(spoken_brief), daemon=True).start()
+            except Exception:
+                pass
+
+            return JSONResponse({
+                "ok": True,
+                "analysis": analysis,
+                "url": f"/uploads/{filename}",
+            })
+
+        @app.get("/api/clipboard")
+        async def get_clipboard_ep(req: Request):
+            """Retrieve current PC clipboard text to send to phone."""
+            if not _auth(req):
+                return JSONResponse({"error": "Unauthorized"}, status_code=401)
+            clip_text = ""
+            try:
+                import pyperclip
+                clip_text = pyperclip.paste() or ""
+            except Exception as e:
+                clip_text = f"Clipboard access error: {e}"
+            return JSONResponse({"ok": True, "text": clip_text})
+
+        @app.post("/api/clipboard")
+        async def set_clipboard_ep(req: Request):
+            """Sync phone text directly into PC clipboard."""
+            if not _auth(req):
+                return JSONResponse({"error": "Unauthorized"}, status_code=401)
+            try:
+                body = await req.json()
+                text = str(body.get("text", ""))
+                import pyperclip
+                pyperclip.copy(text)
+                asyncio.create_task(self.broadcast({
+                    "type": "clipboard_sync",
+                    "text": text[:200],
+                    "timestamp": time.strftime("%H:%M:%S"),
+                }))
+                return JSONResponse({"ok": True, "length": len(text)})
+            except Exception as e:
+                return JSONResponse({"error": str(e)}, status_code=500)
+
+        @app.post("/api/pc-control")
+        async def pc_control_ep(req: Request):
+            """Execute remote PC control commands (lock, sleep, volume, media)."""
+            if not _auth(req):
+                return JSONResponse({"error": "Unauthorized"}, status_code=401)
+            try:
+                body = await req.json()
+                action = str(body.get("action", "")).lower().strip()
+                result = "ok"
+
+                import pyautogui
+                if action in ("lock", "lockdown"):
+                    import sys, ctypes
+                    if sys.platform == "win32":
+                        ctypes.windll.user32.LockWorkStation()
+                        result = "Workstation locked"
+                    else:
+                        result = "Lock only supported on Windows"
+                elif action in ("sleep", "suspend"):
+                    import os
+                    os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
+                    result = "Workstation suspended"
+                elif action in ("mute", "unmute"):
+                    pyautogui.press("volumemute")
+                    result = "Volume mute toggled"
+                elif action in ("vol_up", "volume_up"):
+                    pyautogui.press("volumeup", presses=4)
+                    result = "Volume increased (+8%)"
+                elif action in ("vol_down", "volume_down"):
+                    pyautogui.press("volumedown", presses=4)
+                    result = "Volume decreased (-8%)"
+                elif action in ("play_pause", "media_play", "play", "pause"):
+                    pyautogui.press("playpause")
+                    result = "Media Play/Pause toggled"
+                elif action in ("next_track", "next"):
+                    pyautogui.press("nexttrack")
+                    result = "Media next track"
+                elif action in ("prev_track", "previous"):
+                    pyautogui.press("prevtrack")
+                    result = "Media previous track"
+                else:
+                    return JSONResponse({"error": f"Unknown action: '{action}'"}, status_code=400)
+
+                asyncio.create_task(self.broadcast({
+                    "type": "sys",
+                    "text": f"Remote Action: {result}"
+                }))
+                return JSONResponse({"ok": True, "result": result})
+            except Exception as e:
+                return JSONResponse({"error": str(e)}, status_code=500)
 
         @app.websocket("/ws")
         async def ws_ep(websocket: WebSocket, token: str = ""):

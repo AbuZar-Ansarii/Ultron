@@ -45,6 +45,7 @@ _VK = {
     "ctrl": 0x11, "shift": 0x10, "alt": 0x12,
     "space": 0x20, "f8": 0x77, "f9": 0x78, "f10": 0x79,
     "capslock": 0x14, "insert": 0x2D,
+    "s": 0x53, "c": 0x43, "v": 0x56, "a": 0x41,
 }
 
 # Qt key sequence text for the same chord, used by the windowed fallback.
@@ -171,3 +172,58 @@ class PushToTalk:
 
         self._set_held(False)
         self._scope = "window"
+
+
+class GlobalHotkeyTrigger:
+    """Fires a callback when a hotkey chord is pressed globally (e.g. Ctrl+Alt+S for Screen Mind-Reader)."""
+
+    def __init__(self, chord: tuple[str, ...] = ("ctrl", "alt", "s"), on_trigger: Callable[[], None] | None = None):
+        self._chord = tuple(k.lower() for k in chord)
+        self._on_trigger = on_trigger
+        self._thread: threading.Thread | None = None
+        self._stop = threading.Event()
+        self._was_down = False
+
+    def start(self) -> bool:
+        self.stop()
+        self._stop.clear()
+        if _OS == "Windows" and all(k in _VK for k in self._chord):
+            self._thread = threading.Thread(
+                target=self._poll_loop,
+                name=f"hotkey-{'-'.join(self._chord)}",
+                daemon=True,
+            )
+            self._thread.start()
+            return True
+        return False
+
+    def stop(self) -> None:
+        self._stop.set()
+        t, self._thread = self._thread, None
+        if t is not None and t.is_alive():
+            t.join(timeout=0.8)
+
+    def _poll_loop(self) -> None:
+        import ctypes
+        user32 = ctypes.windll.user32
+        codes = [_VK[k] for k in self._chord]
+        period = 1.0 / 25.0
+
+        while not self._stop.is_set():
+            try:
+                down = all(user32.GetAsyncKeyState(c) & 0x8000 for c in codes)
+            except Exception:
+                break
+
+            if down and not self._was_down:
+                self._was_down = True
+                if self._on_trigger:
+                    try:
+                        self._on_trigger()
+                    except Exception as e:
+                        print(f"[Hotkey] Trigger callback exception: {e}")
+            elif not down:
+                self._was_down = False
+
+            self._stop.wait(period)
+

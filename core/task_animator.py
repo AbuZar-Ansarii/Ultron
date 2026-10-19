@@ -189,18 +189,20 @@ class TaskAnimator:
 
         if any(k in clean for k in ("cognition", "think", "neural", "reason", "synthes", "plan", "analyze", "directive", "intent")):
             return "COGNITION"
-        if any(k in clean for k in ("search", "google", "autopilot", "price_hunter", "research", "browser", "hunter", "bounty", "network", "scanner", "wifi", "lan", "radar", "ping", "optical", "vision")):
+        if any(k in clean for k in ("search", "google", "autopilot", "price_hunter", "research", "browser", "hunter", "bounty", "network", "scanner", "wifi", "lan", "radar", "ping", "optical", "vision", "screen_mind", "screen_processor", "mind_read", "flight", "flights")):
             return "SEARCH"
         if any(k in clean for k in ("purge", "clean", "disk", "trash", "cache", "recycle_bin")):
             return "PURGE"
         if any(k in clean for k in ("ghost", "pilot", "takeover", "mouse", "keyboard", "desktop")):
             return "GHOST"
-        if any(k in clean for k in ("drone", "swarm", "sub_ultron", "fleet", "worker")):
+        if any(k in clean for k in ("drone", "swarm", "sub_ultron", "fleet", "worker", "parallel_swarm", "multi_agent")):
             return "SWARM"
         if any(k in clean for k in ("sentry", "security", "surveillance", "biometric", "face_auth", "face_id", "audit", "auditor", "port_scan", "ports", "listening", "airspace", "lockdown", "iot")):
             return "SENTRY"
         if any(k in clean for k in ("audio", "sound", "music", "video", "youtube", "warp", "volume", "media", "sfx", "meeting", "scribe", "record")):
             return "SONIC"
+        if any(k in clean for k in ("telepathy", "omni_telepathy", "phone_bridge", "clipboard", "sync")):
+            return "WORKSPACE"
         if any(k in clean for k in ("monitor", "status", "system_status", "war_room", "matrix", "hardware", "watchtower", "cloud", "devops", "uptime")):
             return "MATRIX"
         if any(k in clean for k in ("code", "command", "git", "file", "exec", "bash", "powershell", "terminal", "script", "recall", "memory", "workspace")):

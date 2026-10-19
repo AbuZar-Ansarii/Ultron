@@ -323,6 +323,47 @@
       box-shadow: 0 0 10px rgba(255, 31, 67, 0.15);
     }
 
+    /* ── TELEPATHY MODALS & BREACH HUD ── */
+    .telepathy-modal-backdrop {
+      position: fixed; inset: 0; background: rgba(3, 4, 7, 0.85);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .telepathy-modal-backdrop.open { display: flex; }
+    .telepathy-modal {
+      width: 100%; max-width: 440px; background: #0c0f18;
+      border: 1px solid var(--border-bright); border-radius: 12px;
+      box-shadow: 0 0 30px rgba(255, 31, 67, 0.25);
+      overflow: hidden; display: flex; flex-direction: column; gap: 12px; padding: 16px;
+      animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes modalPop { 0% { opacity: 0; transform: scale(0.92); } 100% { opacity: 1; transform: scale(1); } }
+    .t-modal-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+    .t-modal-title { font-size: 13px; font-weight: 800; letter-spacing: 2px; color: var(--crimson); text-transform: uppercase; font-family: monospace; }
+    .t-modal-close { background: none; border: none; color: var(--text-dim); font-size: 18px; cursor: pointer; padding: 2px 6px; }
+    .t-modal-body { font-size: 12px; color: var(--text); display: flex; flex-direction: column; gap: 10px; }
+    .t-input-area { width: 100%; height: 90px; background: #07080e; border: 1px solid var(--border); border-radius: 6px; color: #fff; font-family: monospace; font-size: 11px; padding: 8px; resize: none; outline: none; }
+    .t-btn-row { display: flex; gap: 8px; }
+    .t-btn { flex: 1; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 11px; font-weight: 700; cursor: pointer; text-transform: uppercase; font-family: monospace; }
+    .t-btn.primary { background: var(--crimson); color: #fff; border-color: var(--crimson); box-shadow: 0 0 10px var(--crimson-glow); }
+    .t-btn.cyan { background: rgba(0, 240, 255, 0.15); color: var(--cyan); border-color: var(--cyan); }
+
+    /* Breach Alert Card */
+    .breach-alert-card {
+      border: 2px solid #ff1f43; background: rgba(255, 31, 67, 0.14);
+      box-shadow: 0 0 35px rgba(255, 31, 67, 0.55);
+      animation: breachStrobe 0.8s infinite alternate;
+    }
+    @keyframes breachStrobe { 0% { border-color: #ff1f43; } 100% { border-color: #ffaa22; } }
+
+    /* Vision Result Card */
+    .vision-card {
+      background: #090c14; border: 1px solid rgba(0, 240, 255, 0.35); border-radius: 8px;
+      overflow: hidden; margin-top: 6px; box-shadow: 0 0 15px rgba(0, 240, 255, 0.12);
+    }
+    .vision-thumb { width: 100%; max-height: 200px; object-fit: cover; display: block; border-bottom: 1px solid rgba(0, 240, 255, 0.2); }
+    .vision-body { padding: 10px; font-size: 12px; line-height: 1.5; color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+
     /* ── MAIN DIRECTIVES FEED ── */
     main {
       flex: 1;
@@ -630,15 +671,17 @@
 
   <!-- Workspace Action Matrix Carousel -->
   <nav class="quick-chips-tray">
-    <button class="action-chip priority" onclick="sendQuick('Ultron, aaj mere coding ka man hai')">💻 Coding Matrix</button>
+    <button class="action-chip priority" onclick="triggerCameraVision()">👁️ Camera Eye</button>
+    <button class="action-chip priority" onclick="toggleClipboardModal(true)">📋 Sync Clipboard</button>
+    <button class="action-chip priority" onclick="remotePC('lock')">🔒 Lock PC</button>
+    <button class="action-chip" onclick="remotePC('play_pause')">⏯️ Play/Pause</button>
+    <button class="action-chip" onclick="remotePC('mute')">🔇 Mute PC</button>
+    <button class="action-chip" onclick="sendQuick('Ultron, aaj mere coding ka man hai')">💻 Coding Matrix</button>
     <button class="action-chip" onclick="sendQuick('Ultron, gaming mode on karo')">🎮 Gaming Overclock</button>
     <button class="action-chip" onclick="sendQuick('Ultron, cyber security audit mode')">🛡️ Cyber Audit</button>
     <button class="action-chip" onclick="sendQuick('Ultron, aaj padhai karni hai')">📚 Research Matrix</button>
     <button class="action-chip" onclick="sendQuick('Ultron, chill mode / movie dekhni hai')">🎬 Chill Mode</button>
-    <button class="action-chip" onclick="sendQuick('Ultron, lock workstation')">🔒 Lock Workstation</button>
     <button class="action-chip" onclick="sendQuick('Ultron, system status')">⚡ Status Audit</button>
-    <button class="action-chip" onclick="sendQuick('Ultron, set volume to 100%')">🔊 Vol 100%</button>
-    <button class="action-chip" onclick="sendQuick('Ultron, mute audio')">🔇 Mute Audio</button>
   </nav>
 
   <!-- Directives Chat Stream -->
@@ -646,6 +689,9 @@
 
   <!-- Tactical Bottom Command Footer -->
   <footer>
+    <label class="btn-attach" for="camera-inp" title="Phone Camera Eye (Physical Vision)">👁️</label>
+    <input type="file" id="camera-inp" accept="image/*" capture="environment" style="display:none" onchange="uploadPhoneVision(this)">
+    <button class="btn-attach" type="button" onclick="toggleClipboardModal(true)" title="Sync PC Clipboard">📋</button>
     <label class="btn-attach" for="file-inp" title="Send file to PC">📎</label>
     <input type="file" id="file-inp" multiple accept="*/*" style="display:none">
     <input id="inp" placeholder="Command Ultron workstation…" autocomplete="off">
@@ -653,6 +699,43 @@
     <button class="btn btn-wake" id="wake" onclick="doWake()">WAKE</button>
     <button class="btn btn-send" onclick="doSend()">SEND</button>
   </footer>
+
+  <!-- Telepathy Clipboard Modal -->
+  <div class="telepathy-modal-backdrop" id="clipboard-modal" onclick="if(event.target===this) toggleClipboardModal(false)">
+    <div class="telepathy-modal">
+      <div class="t-modal-header">
+        <span class="t-modal-title">📋 Omni-Link Clipboard</span>
+        <button class="t-modal-close" onclick="toggleClipboardModal(false)">✕</button>
+      </div>
+      <div class="t-modal-body">
+        <div style="font-size:11px; color:var(--text-dim)">Shared buffer between this phone and Ultron PC:</div>
+        <textarea id="clip-text" class="t-input-area" placeholder="Loading PC clipboard…"></textarea>
+        <div class="t-btn-row">
+          <button class="t-btn cyan" onclick="fetchPCClipboard()">🔄 Read PC</button>
+          <button class="t-btn" onclick="copyModalToPhone()">📱 Copy Phone</button>
+          <button class="t-btn primary" onclick="pushModalToPC()">💻 Push PC</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sentry Intruder Breach Modal -->
+  <div class="telepathy-modal-backdrop" id="breach-modal" onclick="if(event.target===this) toggleBreachModal(false)">
+    <div class="telepathy-modal breach-alert-card">
+      <div class="t-modal-header">
+        <span class="t-modal-title" style="color:#ff1f43">⚠️ PERIMETER BREACH ALERT</span>
+        <button class="t-modal-close" onclick="toggleBreachModal(false)">✕</button>
+      </div>
+      <div class="t-modal-body">
+        <div id="breach-desc" style="color:#fff; font-weight:700">Workstation perimeter compromised. Intruder detected!</div>
+        <div id="breach-time" style="font-size:10px; color:var(--text-dim); font-family:monospace"></div>
+        <div style="font-size:11px; color:#ffaa22">Windows locked down via user32.LockWorkStation(). Evidence captured.</div>
+        <div class="t-btn-row">
+          <button class="t-btn primary" onclick="toggleBreachModal(false)">Acknowledge Breach</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script>
     // ── Auth Tokens ───────────────────────────────────────────────────────────
@@ -1019,6 +1102,12 @@
           sys(m.text);
         } else if (m.type === 'file_received') {
           _onFileReceived(m);
+        } else if (m.type === 'phone_vision_result') {
+          _onVisionReceived(m);
+        } else if (m.type === 'clipboard_sync') {
+          _onClipboardSync(m);
+        } else if (m.type === 'breach_alert') {
+          _onBreachAlert(m);
         }
       };
     }
@@ -1198,6 +1287,146 @@
       feed.appendChild(card);
       feed.scrollTop = feed.scrollHeight;
       toast('Workstation received file');
+    }
+
+    // ── Omni-Link Telepathy Functions ─────────────────────────────────────────
+
+    function remotePC(action) {
+      toast(`Directing PC: ${action.toUpperCase()}…`);
+      if (navigator.vibrate) navigator.vibrate(25);
+      _authFetch('/api/pc-control', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action })
+      }).then(r => r.json()).then(data => {
+        if (data.ok) toast(`PC: ${data.result}`);
+        else toast(`Error: ${data.error || 'Failed'}`);
+      }).catch(err => toast(`Network error: ${err.message}`));
+    }
+
+    function triggerCameraVision() {
+      const inp = document.getElementById('camera-inp');
+      if (inp) inp.click();
+    }
+
+    function uploadPhoneVision(input) {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      toast('Transmitting visual telemetry…');
+      sys(`[VISION] Ingesting physical camera frame (${(file.size/1024).toFixed(1)} KB)…`);
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('prompt', 'Inspect this physical scene and describe objects, text, and tactical intelligence.');
+
+      _authFetch('/api/phone-vision', {
+        method: 'POST',
+        body: formData
+      }).then(r => r.json()).then(data => {
+        input.value = '';
+        if (data.ok) {
+          toast('Vision analysis compiled');
+        } else {
+          toast(`Vision fault: ${data.error || 'Unknown'}`);
+        }
+      }).catch(err => {
+        input.value = '';
+        toast(`Upload failed: ${err.message}`);
+      });
+    }
+
+    function _onVisionReceived(m) {
+      const d = document.createElement('div');
+      d.className = 'msg msg-j';
+      d.innerHTML = `
+        <div class="lbl">ULTRON OPTICAL INTELLIGENCE // PHYSICAL SENSOR</div>
+        <div class="vision-card">
+          <img src="${esc(m.url)}" class="vision-thumb" alt="Captured Optical Frame">
+          <div class="vision-body">${esc(m.analysis)}</div>
+        </div>
+      `;
+      feed.appendChild(d);
+      feed.scrollTop = feed.scrollHeight;
+      speakUltronResponse(m.analysis);
+      if (navigator.vibrate) navigator.vibrate([60, 40, 80]);
+    }
+
+    // ── Clipboard Bridge ──────────────────────────────────────────────────────
+    function toggleClipboardModal(show) {
+      const modal = document.getElementById('clipboard-modal');
+      if (!modal) return;
+      if (show === undefined) show = !modal.classList.contains('open');
+      if (show) {
+        modal.classList.add('open');
+        fetchPCClipboard();
+      } else {
+        modal.classList.remove('open');
+      }
+    }
+
+    function fetchPCClipboard() {
+      const txtArea = document.getElementById('clip-text');
+      if (txtArea) txtArea.placeholder = 'Reading PC clipboard…';
+      _authFetch('/api/clipboard')
+        .then(r => r.json())
+        .then(data => {
+          if (data.ok && txtArea) {
+            txtArea.value = data.text || '';
+            toast('PC clipboard synced');
+          }
+        }).catch(() => toast('Clipboard read failed'));
+    }
+
+    function pushModalToPC() {
+      const txtArea = document.getElementById('clip-text');
+      const val = txtArea ? txtArea.value : '';
+      if (!val) { toast('Clipboard buffer is empty'); return; }
+      _authFetch('/api/clipboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: val })
+      }).then(r => r.json()).then(data => {
+        if (data.ok) {
+          toast('Pushed to PC clipboard!');
+          toggleClipboardModal(false);
+        }
+      }).catch(() => toast('Clipboard push failed'));
+    }
+
+    function copyModalToPhone() {
+      const txtArea = document.getElementById('clip-text');
+      const val = txtArea ? txtArea.value : '';
+      if (!val) return;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(val).then(() => toast('Copied to phone!'));
+      } else {
+        txtArea.select();
+        document.execCommand('copy');
+        toast('Copied to phone!');
+      }
+    }
+
+    function _onClipboardSync(m) {
+      toast(`📋 PC Clipboard: ${m.text.slice(0, 35)}…`);
+    }
+
+    // ── Sentry Breach Alert ───────────────────────────────────────────────────
+    function toggleBreachModal(show) {
+      const m = document.getElementById('breach-modal');
+      if (!m) return;
+      if (show) m.classList.add('open');
+      else m.classList.remove('open');
+    }
+
+    function _onBreachAlert(m) {
+      const desc = document.getElementById('breach-desc');
+      const time = document.getElementById('breach-time');
+      if (desc) desc.textContent = `Intrusion Detected: ${m.reason}`;
+      if (time) time.textContent = `Timestamp: ${m.timestamp || new Date().toLocaleTimeString()} | Workstation LOCKED`;
+      toggleBreachModal(true);
+      if (navigator.vibrate) navigator.vibrate([400, 150, 400, 150, 600]);
+      playUltronChime();
+      speakUltronResponse('Security alert. Workstation perimeter breach detected. Operating system has been locked.');
     }
 
     document.getElementById('file-inp').addEventListener('change', function () {
