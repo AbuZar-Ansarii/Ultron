@@ -1509,6 +1509,15 @@ class JarvisLive:
         else:
             async def _speak_unified():
                 self.ui.write_log(f"{self._asst_name}: {text}")
+                if self._dashboard:
+                    try:
+                        asyncio.create_task(self._dashboard.broadcast({
+                            "type": "log", "speaker": "ultron",
+                            "text": text,
+                            "speak": True,
+                        }))
+                    except Exception:
+                        pass
                 self.set_speaking(True)
                 try:
                     from core.tts import create_tts_player
@@ -2210,6 +2219,16 @@ class JarvisLive:
                             batch = bytearray(pcm.tobytes())
                     except Exception:
                         pass
+
+                    # Stream live speech audio to connected phone dashboards
+                    if self._dashboard:
+                        try:
+                            asyncio.create_task(
+                                self._dashboard.broadcast_audio(pcm.tobytes(), sample_rate=RECEIVE_SAMPLE_RATE)
+                            )
+                        except Exception:
+                            pass
+
                     hop = _VIS_HOP / RECEIVE_SAMPLE_RATE
                     frames = _pcm_visemes(pcm, sr=RECEIVE_SAMPLE_RATE)
                     # When does this batch become audible? The stream was

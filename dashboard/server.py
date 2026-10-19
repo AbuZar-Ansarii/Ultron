@@ -538,6 +538,18 @@ class DashboardServer:
                 await ws.send_json(msg)
             except Exception:
                 dead.add(ws)
+    async def broadcast_audio(self, pcm_bytes: bytes, sample_rate: int = 24000) -> None:
+        """Stream raw PCM speech audio chunks directly to connected phone dashboards."""
+        if not self._clients or not pcm_bytes:
+            return
+        b64 = base64.b64encode(pcm_bytes).decode("ascii")
+        msg = {"type": "audio_stream", "data": b64, "sr": sample_rate}
+        dead: set[WebSocket] = set()
+        for ws in list(self._clients):
+            try:
+                await ws.send_json(msg)
+            except Exception:
+                dead.add(ws)
         self._clients -= dead
 
     # ── FastAPI app ───────────────────────────────────────────────────────
@@ -548,6 +560,18 @@ class DashboardServer:
         def _auth(req: Request) -> bool:
             tok = req.headers.get("authorization", "").removeprefix("Bearer ").strip()
             return bool(tok) and tok in self._tokens
+
+        # serve avatar image for mobile UI
+        @app.get("/avatar.png")
+        @app.get("/static/ultron_avatar.png")
+        async def serve_avatar():
+            for candidate in [
+                STATIC_DIR / "ultron_avatar.png",
+                BASE_DIR / "ultron_avatar.png",
+            ]:
+                if candidate.exists():
+                    return FileResponse(str(candidate), media_type="image/png")
+            return JSONResponse({"error": "Avatar image not found"}, status_code=404)
 
         # serve CryptoJS from local cache, fallback to CDN redirect
         @app.get("/static/crypto.js")
