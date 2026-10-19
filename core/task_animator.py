@@ -93,6 +93,8 @@ class TaskAnimator:
         self._sonic_phase: float = 0.0
         self._peak_holds: list[float] = [0.3] * 16
         self._circuit_pulses: list[dict] = []
+        self._task_elapsed: float = 0.0
+        self._scanline_y: float = 0.0
 
         # Initialize drone fleet with 3D orbit parameters
         for i in range(6):
@@ -180,6 +182,7 @@ class TaskAnimator:
         self.label = label or self._default_label(self.category, task_name, details)
         self._target_alpha = 1.0
         self._completion_burst = 0.0
+        self._task_elapsed = 0.0
 
         # Reset category-specific seeds
         if self.category == "SEARCH":
@@ -253,6 +256,9 @@ class TaskAnimator:
         """Advance animation states by dt seconds (60 FPS)."""
         dt = max(1e-4, min(0.08, float(dt)))
         self.t += dt
+        if self.active_task:
+            self._task_elapsed += dt
+        self._scanline_y = (self._scanline_y + dt * 0.24) % 1.0
 
         # Smooth alpha transitions
         if self.alpha < self._target_alpha:
@@ -389,7 +395,13 @@ class TaskAnimator:
 
         master_alpha = self.alpha
 
-        # Draw specific category visualization
+        # 1. Full-screen Tactical HUD Frame, Corner Brackets & Telemetry Decks
+        self._paint_tactical_hud_frame(p, w, h, master_alpha)
+
+        # 2. Concentric Orbiting Holographic Azimuth Rings around Avatar
+        self._paint_holographic_orbitals(p, cx, cy, r, master_alpha)
+
+        # 3. Draw specific category visualization
         cat = self.category
         if cat == "SEARCH":
             self._paint_search(p, cx, cy, r, master_alpha)
@@ -412,14 +424,196 @@ class TaskAnimator:
         elif cat == "GENERIC":
             self._paint_generic(p, cx, cy, r, master_alpha)
 
-        # Draw Stark/Ultron Chamfered HUD Task Telemetry Banner
+        # 4. Draw Stark/Ultron Chamfered HUD Task Telemetry Banner
         self._paint_task_banner(p, cx, cy, r, w, master_alpha)
 
-        # Draw Task Complete Burst if active
+        # 5. Draw Task Complete Burst if active
         if self._completion_burst > 0.01:
             self._paint_completion_burst(p, cx, cy, r, self._completion_burst)
 
         p.restore()
+
+    # ── Ambient HUD Framing & Holographic Orbitals ────────────────────────────
+
+    def _paint_tactical_hud_frame(self, p: QPainter, w: float, h: float, alpha: float) -> None:
+        """Render sci-fi Stark/Ultron HUD corner brackets, subtle scanlines, and side telemetry decks."""
+        try:
+            col_crimson = QColor(255, 45, 40, int(190 * alpha))
+            col_cyan = QColor(0, 240, 255, int(180 * alpha))
+            col_dim = QColor(140, 160, 190, int(90 * alpha))
+
+            # 1. Atmospheric Holographic Scanline
+            scan_y = self._scanline_y * h
+            p.save()
+            g_scan = QLinearGradient(0, scan_y, w, scan_y)
+            g_scan.setColorAt(0.0, QColor(0, 240, 255, 0))
+            g_scan.setColorAt(0.5, QColor(0, 240, 255, int(35 * alpha)))
+            g_scan.setColorAt(1.0, QColor(0, 240, 255, 0))
+            p.setPen(QPen(QBrush(g_scan), 2.0))
+            p.drawLine(QLineF(0, scan_y, w, scan_y))
+            p.restore()
+
+            # 2. Four Military HUD Chamfered Corner Reticles
+            pad = 16.0
+            arm = 22.0
+            p.save()
+            p.setPen(QPen(col_crimson, 1.8))
+            p.setBrush(Qt.BrushStyle.NoBrush)
+
+            # Top-Left
+            p.drawLine(QLineF(pad, pad, pad + arm, pad))
+            p.drawLine(QLineF(pad, pad, pad, pad + arm))
+            p.drawLine(QLineF(pad + 4, pad + 4, pad + 8, pad + 4))
+
+            # Top-Right
+            p.drawLine(QLineF(w - pad, pad, w - pad - arm, pad))
+            p.drawLine(QLineF(w - pad, pad, w - pad, pad + arm))
+            p.drawLine(QLineF(w - pad - 4, pad + 4, w - pad - 8, pad + 4))
+
+            # Bottom-Left
+            p.drawLine(QLineF(pad, h - pad, pad + arm, h - pad))
+            p.drawLine(QLineF(pad, h - pad, pad, h - pad - arm))
+
+            # Bottom-Right
+            p.drawLine(QLineF(w - pad, h - pad, w - pad - arm, h - pad))
+            p.drawLine(QLineF(w - pad, h - pad, w - pad, h - pad - arm))
+
+            # Corner Telemetry Text
+            p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
+            p.setPen(QPen(col_cyan, 1.0))
+            p.drawText(QRectF(pad + 6, pad + 6, 120, 12), Qt.AlignmentFlag.AlignLeft, "SYS // OVERCLOCK")
+            p.drawText(QRectF(w - pad - 126, pad + 6, 120, 12), Qt.AlignmentFlag.AlignRight, "LAT // 42°18'N")
+            p.drawText(QRectF(pad + 6, h - pad - 16, 120, 12), Qt.AlignmentFlag.AlignLeft, "SEC // LVL-05")
+            p.drawText(QRectF(w - pad - 126, h - pad - 16, 120, 12), Qt.AlignmentFlag.AlignRight, "PWR // 99.8%")
+            p.restore()
+
+            # 3. Left Telemetry Deck: Frequency Oscilloscope & Core Meters (Active if wide screen)
+            if w >= 620:
+                p.save()
+                deck_x = 22.0
+                deck_y = h * 0.44
+
+                # Box framing
+                p.setPen(QPen(col_dim, 0.9, Qt.PenStyle.DotLine))
+                p.drawLine(QLineF(deck_x, deck_y - 20, deck_x + 95, deck_y - 20))
+                p.drawLine(QLineF(deck_x, deck_y + 65, deck_x + 95, deck_y + 65))
+
+                p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
+                p.setPen(QPen(col_cyan, 1.0))
+                p.drawText(QRectF(deck_x, deck_y - 18, 95, 12), Qt.AlignmentFlag.AlignLeft, "CORE TELEMETRY")
+
+                # 4-band mini load equalizer
+                for bi in range(4):
+                    bw_load = 0.3 + 0.6 * (0.5 + 0.5 * math.sin(self.t * 4.0 + bi * 1.2))
+                    bar_w = int(bw_load * 50)
+                    by = deck_y + bi * 8
+                    p.setPen(Qt.PenStyle.NoPen)
+                    p.setBrush(QBrush(col_crimson if bi == 0 else col_cyan))
+                    p.drawRoundedRect(QRectF(deck_x, by, bar_w, 4), 1.0, 1.0)
+
+                # Micro oscilloscope waveform
+                osc_path = QPainterPath()
+                osc_path.moveTo(deck_x, deck_y + 48)
+                for oi in range(95):
+                    oy = deck_y + 48 + math.sin(self.t * 7.0 + oi * 0.14) * 4.5 * math.cos(self.t * 2.0 + oi * 0.05)
+                    osc_path.lineTo(deck_x + oi, oy)
+                p.setBrush(Qt.BrushStyle.NoBrush)
+                p.setPen(QPen(QColor(0, 255, 160, int(190 * alpha)), 1.1))
+                p.drawPath(osc_path)
+
+                p.setPen(QPen(col_dim, 1.0))
+                p.drawText(QRectF(deck_x, deck_y + 53, 95, 10), Qt.AlignmentFlag.AlignLeft, "FREQ: 4.88 GHz")
+                p.restore()
+
+            # 4. Right Telemetry Deck: Mission Stopwatch & Dynamic Register Stream
+            if w >= 620:
+                p.save()
+                deck_r_x = w - 125.0
+                deck_r_y = h * 0.44
+
+                p.setPen(QPen(col_dim, 0.9, Qt.PenStyle.DotLine))
+                p.drawLine(QLineF(deck_r_x, deck_r_y - 20, deck_r_x + 105, deck_r_y - 20))
+                p.drawLine(QLineF(deck_r_x, deck_r_y + 65, deck_r_x + 105, deck_r_y + 65))
+
+                p.setFont(QFont("Consolas", 6, QFont.Weight.Bold))
+                p.setPen(QPen(col_cyan, 1.0))
+                p.drawText(QRectF(deck_r_x, deck_r_y - 18, 105, 12), Qt.AlignmentFlag.AlignRight, "MISSION CLOCK")
+
+                # Mission Stopwatch
+                mins = int(self._task_elapsed // 60)
+                secs = int(self._task_elapsed % 60)
+                millis = int((self._task_elapsed * 10) % 10)
+                timer_str = f"T+ {mins:02d}:{secs:02d}.{millis:01d}s"
+
+                p.setFont(QFont("Consolas", 8, QFont.Weight.Bold))
+                p.setPen(QPen(QColor(255, 230, 100, int(230 * alpha)), 1.0))
+                p.drawText(QRectF(deck_r_x, deck_r_y - 2, 105, 14), Qt.AlignmentFlag.AlignRight, timer_str)
+
+                # Rotating address telemetry
+                p.setFont(QFont("Consolas", 6))
+                addr_num = int((self.t * 300) % 0xFFFF)
+                p.setPen(QPen(col_dim, 1.0))
+                p.drawText(QRectF(deck_r_x, deck_r_y + 15, 105, 12), Qt.AlignmentFlag.AlignRight, f"HEX: 0x7FFF{addr_num:04X}")
+                p.drawText(QRectF(deck_r_x, deck_r_y + 28, 105, 12), Qt.AlignmentFlag.AlignRight, "LINK: 100% AES")
+                p.drawText(QRectF(deck_r_x, deck_r_y + 41, 105, 12), Qt.AlignmentFlag.AlignRight, "THREAT: NOMINAL")
+                p.restore()
+        except Exception:
+            pass
+
+    def _paint_holographic_orbitals(self, p: QPainter, cx: float, cy: float, r: float, alpha: float) -> None:
+        """Render high-tech segmented rotating azimuth rings and targeting dials around Ultron's head."""
+        try:
+            p.save()
+            p.translate(cx, cy)
+            p.setBrush(Qt.BrushStyle.NoBrush)
+
+            col_red = QColor(255, 45, 40, int(190 * alpha))
+            col_cyan = QColor(0, 240, 255, int(180 * alpha))
+            col_dim = QColor(0, 160, 210, int(60 * alpha))
+
+            # 1. Outer Segmented Azimuth Ring (clockwise)
+            out_r = r * 1.48
+            p.save()
+            p.rotate(math.degrees(self.t * 0.45))
+            p.setPen(QPen(col_cyan, 1.3))
+            # 4 segmented arcs
+            for arc_start in (15, 105, 195, 285):
+                p.drawArc(QRectF(-out_r, -out_r, out_r * 2, out_r * 2), arc_start * 16, 60 * 16)
+
+            # Degree ticks every 30 deg
+            for deg in range(0, 360, 30):
+                rad = math.radians(deg)
+                p.setPen(QPen(col_red if deg % 90 == 0 else col_dim, 1.4 if deg % 90 == 0 else 0.8))
+                t_len = 7.0 if deg % 90 == 0 else 4.0
+                p.drawLine(QLineF(math.cos(rad) * out_r, math.sin(rad) * out_r,
+                                 math.cos(rad) * (out_r + t_len), math.sin(rad) * (out_r + t_len)))
+            p.restore()
+
+            # 2. Middle Counter-Rotating Notched Vernier Ring
+            mid_r = r * 1.36
+            p.save()
+            p.rotate(-math.degrees(self.t * 0.75))
+            p.setPen(QPen(col_red, 1.2, Qt.PenStyle.DashDotLine))
+            p.drawArc(QRectF(-mid_r, -mid_r, mid_r * 2, mid_r * 2), 30 * 16, 120 * 16)
+            p.drawArc(QRectF(-mid_r, -mid_r, mid_r * 2, mid_r * 2), 210 * 16, 120 * 16)
+
+            # Orbiting energy beads
+            for bead_ang in (0.0, math.pi):
+                bx = math.cos(bead_ang) * mid_r
+                by = math.sin(bead_ang) * mid_r
+                p.setBrush(QBrush(QColor(255, 255, 255, int(240 * alpha))))
+                p.setPen(Qt.PenStyle.NoPen)
+                p.drawEllipse(QPointF(bx, by), 2.2, 2.2)
+            p.restore()
+
+            # 3. Inner Reticle Bracket Teeth
+            in_r = r * 1.24
+            p.setPen(QPen(col_dim, 0.8, Qt.PenStyle.DotLine))
+            p.drawEllipse(QRectF(-in_r, -in_r, in_r * 2, in_r * 2))
+
+            p.restore()
+        except Exception:
+            pass
 
     # ── Category 1: SEARCH / HUNT (Master Recon Radar) ────────────────────────
 
