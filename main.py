@@ -1029,6 +1029,16 @@ class JarvisLive:
 
         self.ui.set_state("THINKING")
         self.ui.write_log(f"User: {text}")
+        if self._dashboard:
+            try:
+                asyncio.create_task(self._dashboard.broadcast({
+                    "type": "log",
+                    "speaker": "user",
+                    "text": text,
+                    "ts": datetime.now().isoformat(),
+                }))
+            except Exception:
+                pass
         print(f"[Ultron] Processing command: '{text}' using {provider.upper()} ({model})...")
 
         # Build unified prompt & tool declarations
@@ -1060,6 +1070,14 @@ class JarvisLive:
                         except Exception:
                             fn_args = {}
                     self.ui.write_log(f"SYS: Calling tool '{fn_name}'...")
+                    if self._dashboard:
+                        try:
+                            asyncio.create_task(self._dashboard.broadcast({
+                                "type": "sys",
+                                "text": f"EXECUTING DIRECTIVE: {fn_name.upper()}",
+                            }))
+                        except Exception:
+                            pass
                     print(f"[Ultron] Executing tool: '{fn_name}' with args: {fn_args}")
                     self.ui.set_active_task(fn_name, details=str(fn_args))
                     try:
@@ -1089,6 +1107,17 @@ class JarvisLive:
             if reply:
                 self.ui.write_log(f"{self._asst_name}: {reply}")
                 print(f"[Ultron] Ultron response: '{reply}'")
+                if self._dashboard:
+                    try:
+                        asyncio.create_task(self._dashboard.broadcast({
+                            "type": "log",
+                            "speaker": "ultron",
+                            "text": reply,
+                            "ts": datetime.now().isoformat(),
+                            "speak": True,
+                        }))
+                    except Exception:
+                        pass
                 self.set_speaking(True)
                 try:
                     from core.tts import create_tts_player
@@ -1106,6 +1135,14 @@ class JarvisLive:
         except Exception as e:
             print(f"[Ultron] Command execution error: {e}")
             self.ui.write_log(f"ERR: {provider.upper()} error: {e}")
+            if self._dashboard:
+                try:
+                    asyncio.create_task(self._dashboard.broadcast({
+                        "type": "sys",
+                        "text": f"EXECUTION ERROR: {str(e)[:60]}",
+                    }))
+                except Exception:
+                    pass
             self.set_speaking(False)
             self.ui.set_state("ONLINE")
 
@@ -2093,6 +2130,7 @@ class JarvisLive:
                                         "type": "log", "speaker": "ultron",
                                         "text": full_out,
                                         "ts": datetime.now().isoformat(),
+                                        "speak": True,
                                     }))
                             out_buf = []
 
@@ -2335,6 +2373,17 @@ class JarvisLive:
                     ]
                 greeting = random.choice(ultron_greetings)
                 self.ui.write_log(f"{self._asst_name}: {greeting}")
+                if self._dashboard:
+                    try:
+                        asyncio.create_task(self._dashboard.broadcast({
+                            "type": "log",
+                            "speaker": "ultron",
+                            "text": greeting,
+                            "ts": datetime.now().isoformat(),
+                            "speak": True,
+                        }))
+                    except Exception:
+                        pass
                 self.set_speaking(True)
                 try:
                     from core.tts import create_tts_player
@@ -2632,6 +2681,15 @@ class JarvisLive:
                         turn_complete=True,
                     )
                     self.ui.write_log(f"[Web]: {text}")
+                    if self._dashboard:
+                        try:
+                            asyncio.create_task(self._dashboard.broadcast({
+                                "type": "log", "speaker": "user",
+                                "text": text,
+                                "ts": datetime.now().isoformat(),
+                            }))
+                        except Exception:
+                            pass
                 else:
                     self.ui.write_log(f"[Web]: {text}")
                     await self._handle_unified_text_command(text)

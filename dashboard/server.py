@@ -21,7 +21,7 @@ from pathlib import Path
 _DEPS_OK = False
 try:
     from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
-    from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
+    from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, Response
     import uvicorn
     _DEPS_OK = True
 except ImportError:
@@ -584,6 +584,53 @@ class DashboardServer:
                 if candidate.exists():
                     return FileResponse(str(candidate), media_type="image/png")
             return JSONResponse({"error": "Avatar image not found"}, status_code=404)
+
+        # ── Ultra-Low-Latency Ultron Neural Speech Stream for Mobile Loudspeaker ──
+        @app.get("/api/tts")
+        async def tts_stream(text: str = "", token: str = ""):
+            tok = token.strip()
+            if not tok or tok not in self._tokens:
+                return JSONResponse({"error": "Unauthorized"}, status_code=401)
+            raw = text.strip()
+            if not raw:
+                return JSONResponse({"error": "Empty text"}, status_code=400)
+            try:
+                from core.tts import _clean_tts_text, resolve_voice_for_text
+                from memory.config_manager import get_edge_voice, get_voice_rate, get_voice_pitch
+                import edge_tts
+
+                clean = _clean_tts_text(raw)
+                if not clean:
+                    return JSONResponse({"error": "No audible text"}, status_code=400)
+
+                # Cap length for ultra-responsive mobile playback
+                clean_capped = clean[:600]
+                default_voice = get_edge_voice() or "en-US-ChristopherNeural"
+                voice = resolve_voice_for_text(clean_capped, default_voice)
+                rate = get_voice_rate() or "+15%"
+                pitch = get_voice_pitch(voice) or "-18Hz"
+                if "hi-in" in voice.lower():
+                    pitch = "-15Hz"
+
+                comm = edge_tts.Communicate(clean_capped, voice, rate=rate, pitch=pitch)
+                buf = bytearray()
+                async for chunk in comm.stream():
+                    if chunk["type"] == "audio":
+                        buf.extend(chunk["data"])
+
+                if buf:
+                    return Response(
+                        content=bytes(buf),
+                        media_type="audio/mpeg",
+                        headers={
+                            "Cache-Control": "no-cache, no-store, must-revalidate",
+                            "Accept-Ranges": "bytes",
+                        }
+                    )
+                return JSONResponse({"error": "Synthesis yielded no audio"}, status_code=500)
+            except Exception as e:
+                print(f"[Dashboard] TTS error: {e}")
+                return JSONResponse({"error": str(e)}, status_code=500)
 
         # serve CryptoJS from local cache, fallback to CDN redirect
         @app.get("/static/crypto.js")

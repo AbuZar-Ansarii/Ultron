@@ -3,35 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#06070a">
   <title>Ultron // Tactical Remote</title>
   <script src="/static/crypto.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #06070a;
-      --surface: #0a0c13;
-      --card-bg: rgba(13, 16, 26, 0.82);
-      --border: rgba(255, 31, 67, 0.24);
-      --border-bright: rgba(255, 31, 67, 0.7);
+      --bg: #050608;
+      --surface: #090b12;
+      --card-bg: rgba(12, 15, 24, 0.88);
+      --border: rgba(255, 31, 67, 0.28);
+      --border-bright: rgba(255, 31, 67, 0.75);
       --crimson: #ff1f43;
-      --crimson-glow: rgba(255, 31, 67, 0.5);
-      --crimson-dim: rgba(255, 31, 67, 0.14);
+      --crimson-glow: rgba(255, 31, 67, 0.55);
+      --crimson-dim: rgba(255, 31, 67, 0.16);
       --gold: #ffaa22;
       --cyan: #00f0ff;
-      --cyan-dim: rgba(0, 240, 255, 0.12);
+      --cyan-dim: rgba(0, 240, 255, 0.14);
       --green: #00ff88;
-      --green-dim: rgba(0, 255, 136, 0.16);
+      --green-dim: rgba(0, 255, 136, 0.18);
       --text: #f0f4fc;
-      --text-dim: #7a889b;
-      --text-muted: #4e596b;
-      --panel: #0e111a;
+      --text-dim: #7f8fa4;
+      --text-muted: #4e5a6f;
+      --panel: #0d101b;
     }
     html, body {
       height: 100%;
       background: var(--bg);
       background-image:
-        radial-gradient(circle at 50% 0%, rgba(255, 31, 67, 0.1) 0%, transparent 65%),
-        radial-gradient(circle at 50% 100%, rgba(0, 240, 255, 0.05) 0%, transparent 55%);
+        radial-gradient(circle at 50% 0%, rgba(255, 31, 67, 0.12) 0%, transparent 65%),
+        radial-gradient(circle at 50% 100%, rgba(0, 240, 255, 0.06) 0%, transparent 55%);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
       display: flex;
@@ -67,9 +70,9 @@
       text-shadow: 0 0 10px var(--crimson);
     }
     .logo-title {
-      font-size: 14.5px;
+      font-size: 14px;
       font-weight: 900;
-      letter-spacing: 4px;
+      letter-spacing: 3.5px;
       color: #ffffff;
     }
     .logo-title em { color: var(--crimson); font-style: normal; text-shadow: 0 0 12px var(--crimson); }
@@ -129,9 +132,17 @@
       transition: all 0.25s ease;
       white-space: nowrap;
     }
+    .spk-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 6px var(--gold);
+      transition: all 0.3s;
+    }
     /* When locked / waiting for user tap */
     .spk-pill.locked {
-      background: rgba(255, 170, 34, 0.15);
+      background: rgba(255, 170, 34, 0.14);
       border: 1px solid var(--gold);
       color: var(--gold);
       box-shadow: 0 0 12px rgba(255, 170, 34, 0.3);
@@ -146,16 +157,34 @@
       background: rgba(0, 255, 136, 0.12);
       border: 1px solid rgba(0, 255, 136, 0.45);
       color: var(--green);
+      box-shadow: 0 0 10px rgba(0, 255, 136, 0.15);
     }
+    .spk-pill.active .spk-dot {
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+    }
+    /* When actively speaking */
+    .spk-pill.speaking {
+      background: rgba(255, 31, 67, 0.22);
+      border: 1.5px solid var(--crimson);
+      color: #ffffff;
+      box-shadow: 0 0 16px rgba(255, 31, 67, 0.6);
+    }
+    .spk-pill.speaking .spk-dot {
+      background: var(--crimson);
+      box-shadow: 0 0 10px var(--crimson);
+      animation: blink 0.5s infinite;
+    }
+
     /* Equalizer Wave Bars */
     .wave-bars {
       display: inline-flex;
       align-items: flex-end;
       gap: 2px;
-      height: 10px;
+      height: 11px;
     }
     .wave-bar {
-      width: 2px;
+      width: 2.2px;
       background: currentColor;
       border-radius: 1px;
       height: 3px;
@@ -163,8 +192,9 @@
     }
     .spk-pill.speaking .wave-bar:nth-child(1) { animation: wavePulse 0.35s ease-in-out infinite alternate; }
     .spk-pill.speaking .wave-bar:nth-child(2) { animation: wavePulse 0.5s ease-in-out infinite alternate 0.1s; }
-    .spk-pill.speaking .wave-bar:nth-child(3) { animation: wavePulse 0.4s ease-in-out infinite alternate 0.2s; }
-    @keyframes wavePulse { 0% { height: 2px; } 100% { height: 10px; } }
+    .spk-pill.speaking .wave-bar:nth-child(3) { animation: wavePulse 0.38s ease-in-out infinite alternate 0.2s; }
+    .spk-pill.speaking .wave-bar:nth-child(4) { animation: wavePulse 0.46s ease-in-out infinite alternate 0.15s; }
+    @keyframes wavePulse { 0% { height: 2px; } 100% { height: 11px; } }
 
     .hud-toggle-btn {
       background: rgba(255, 255, 255, 0.04);
@@ -197,12 +227,31 @@
     .avatar-viewport {
       width: 100%;
       max-width: 340px;
-      height: 175px;
+      height: 180px;
       position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
+    }
+    /* Tactical Corner Brackets */
+    .avatar-viewport::before, .avatar-viewport::after {
+      content: '';
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      pointer-events: none;
+      z-index: 5;
+    }
+    .avatar-viewport::before {
+      top: 2px; left: 6px;
+      border-top: 1.5px solid var(--crimson);
+      border-left: 1.5px solid var(--crimson);
+    }
+    .avatar-viewport::after {
+      bottom: 2px; right: 6px;
+      border-bottom: 1.5px solid var(--crimson);
+      border-right: 1.5px solid var(--crimson);
     }
 
     #avatar-canvas {
@@ -220,11 +269,12 @@
       font-family: ui-monospace, 'Courier New', monospace;
       font-size: 8.5px;
       letter-spacing: 1px;
-      padding: 2px 6px 0;
+      padding: 3px 6px 0;
       color: var(--text-dim);
     }
     .m-hi { color: var(--crimson); font-weight: 700; }
     .m-cyan { color: var(--cyan); font-weight: 700; }
+    .m-grn { color: var(--green); font-weight: 700; }
 
     /* ── QUICK ACTION MATRIX CAROUSEL ── */
     .quick-chips-tray {
@@ -306,8 +356,8 @@
     /* Ultron Directives */
     .msg-j {
       align-self: flex-start;
-      background: rgba(255, 31, 67, 0.06);
-      border: 1px solid rgba(255, 31, 67, 0.28);
+      background: rgba(255, 31, 67, 0.07);
+      border: 1px solid rgba(255, 31, 67, 0.3);
       border-left: 3.5px solid var(--crimson);
       border-bottom-left-radius: 3px;
       box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
@@ -329,8 +379,8 @@
     /* User Commands */
     .msg-u {
       align-self: flex-end;
-      background: rgba(0, 240, 255, 0.05);
-      border: 1px solid rgba(0, 240, 255, 0.24);
+      background: rgba(0, 240, 255, 0.06);
+      border: 1px solid rgba(0, 240, 255, 0.26);
       border-right: 3.5px solid var(--cyan);
       border-bottom-right-radius: 3px;
       box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
@@ -538,6 +588,9 @@
 <body>
   <div id="toast"></div>
 
+  <!-- Dedicated HTML5 Audio Player for Direct Mobile Loudspeaker Playback -->
+  <audio id="remote-player" playsinline preload="auto"></audio>
+
   <!-- Top Header HUD -->
   <header>
     <div class="logo-box">
@@ -549,9 +602,11 @@
     <div class="spacer"></div>
 
     <!-- Phone Speaker Toggle & Equalizer Wave -->
-    <div class="spk-pill locked" id="spk-pill" onclick="unlockAudio(true)" title="Tap to Enable Mobile Speaker">
+    <div class="spk-pill locked" id="spk-pill" onclick="unlockAudio(true)" title="Tap to Activate Mobile Speaker">
+      <span class="spk-dot"></span>
       <span id="spk-label">⚡ ENABLE AUDIO</span>
       <span class="wave-bars">
+        <span class="wave-bar"></span>
         <span class="wave-bar"></span>
         <span class="wave-bar"></span>
         <span class="wave-bar"></span>
@@ -567,9 +622,9 @@
       <canvas id="avatar-canvas"></canvas>
     </div>
     <div class="deck-metrics">
-      <div>CHASSIS: <span class="m-hi">PRIME</span></div>
+      <div>CHASSIS: <span class="m-hi">PRIME MK-XL</span></div>
       <div>CORE: <span class="m-cyan" id="m-state">SENTIENT</span></div>
-      <div>SPEAKER: <span class="m-hi" id="m-spk">DUAL UPLINK</span></div>
+      <div>SPEAKER: <span class="m-grn" id="m-spk">DUAL ACTIVE</span></div>
     </div>
   </section>
 
@@ -644,28 +699,33 @@
 
     if (_sessionKey) _initCrypto(_sessionKey);
 
-    // ── High-Fidelity Mobile Web Audio & Phone Speaker System ─────────────────
+    // ── Multi-Layer Mobile Loudspeaker & Speech Engine ────────────────────────
     let _audioCtx = null;
     let _nextPlayTime = 0;
     let _phoneSpkUnlocked = false;
+    let _playerPreWarmed = false;
     let _hasStreamAudioPlayed = false;
+    let _lastPcmChunkTime = 0;
     let _vocalLevel = 0;
     let _lastVoiceTime = 0;
+    let _vocalInterval = null;
 
-    // Resampling & Universal AudioContext Initialization
     function getAudioCtx() {
       if (!_audioCtx) {
         const AudioCtor = window.AudioContext || window.webkitAudioContext;
-        _audioCtx = new AudioCtor();
+        if (AudioCtor) {
+          _audioCtx = new AudioCtor();
+        }
       }
       return _audioCtx;
     }
 
-    // Play High-Tech Ultron Sci-Fi Chime on Audio Activation
+    // High-Tech Ultron Chime on Audio Activation
     function playUltronChime() {
       const ctx = getAudioCtx();
       if (!ctx) return;
       try {
+        if (ctx.state === 'suspended') ctx.resume();
         const osc1 = ctx.createOscillator();
         const osc2 = ctx.createOscillator();
         const gain = ctx.createGain();
@@ -674,14 +734,14 @@
         osc2.type = 'sine';
 
         const now = ctx.currentTime;
-        osc1.frequency.setValueAtTime(420, now);
-        osc1.frequency.exponentialRampToValueAtTime(840, now + 0.12);
+        osc1.frequency.setValueAtTime(380, now);
+        osc1.frequency.exponentialRampToValueAtTime(760, now + 0.14);
 
-        osc2.frequency.setValueAtTime(840, now);
-        osc2.frequency.exponentialRampToValueAtTime(1260, now + 0.12);
+        osc2.frequency.setValueAtTime(760, now);
+        osc2.frequency.exponentialRampToValueAtTime(1140, now + 0.14);
 
-        gain.gain.setValueAtTime(0.08, now);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+        gain.gain.setValueAtTime(0.09, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.32);
 
         osc1.connect(gain);
         osc2.connect(gain);
@@ -689,26 +749,65 @@
 
         osc1.start(now);
         osc2.start(now);
-        osc1.stop(now + 0.3);
-        osc2.stop(now + 0.3);
+        osc1.stop(now + 0.35);
+        osc2.stop(now + 0.35);
       } catch (e) {
-        console.warn('Chime audio warning', e);
+        console.warn('Chime warning', e);
       }
     }
 
-    // Unlocks Web Audio & SpeechSynthesis with User Gesture
+    // Visual & State Toggle when Ultron speaks
+    function setSpeakingUi(speaking) {
+      const pill = document.getElementById('spk-pill');
+      const mSpk = document.getElementById('m-spk');
+      const mState = document.getElementById('m-state');
+      if (speaking) {
+        pill.classList.add('speaking');
+        if (mSpk) mSpk.textContent = 'BROADCASTING';
+        if (mState) mState.textContent = 'TRANSMITTING';
+        _lastVoiceTime = Date.now();
+        if (!_vocalInterval) {
+          _vocalInterval = setInterval(() => {
+            _vocalLevel = 0.45 + Math.random() * 0.55;
+            _lastVoiceTime = Date.now();
+          }, 80);
+        }
+      } else {
+        pill.classList.remove('speaking');
+        if (mSpk) mSpk.textContent = 'DUAL ACTIVE';
+        if (mState) mState.textContent = 'SENTIENT';
+        if (_vocalInterval) {
+          clearInterval(_vocalInterval);
+          _vocalInterval = null;
+        }
+        _vocalLevel = 0;
+      }
+    }
+
+    // Universal Audio Unlocking: Works on iOS Safari & Android Chrome
     function unlockAudio(userAction = false) {
+      // 1. Resume AudioContext
       const ctx = getAudioCtx();
       if (ctx && ctx.state === 'suspended') {
-        ctx.resume();
+        ctx.resume().catch(() => {});
       }
 
-      // Unlock SpeechSynthesis with silent utterance
+      // 2. Pre-warm HTML5 <audio> element with 1-sample silent WAV
+      const player = document.getElementById('remote-player');
+      if (player && !_playerPreWarmed) {
+        player.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+        player.play().then(() => {
+          player.pause();
+          _playerPreWarmed = true;
+        }).catch(() => {});
+      }
+
+      // 3. Pre-warm SpeechSynthesis with silent utterance
       if (window.speechSynthesis) {
         try {
-          const silentUtterance = new SpeechSynthesisUtterance(' ');
-          silentUtterance.volume = 0.01;
-          window.speechSynthesis.speak(silentUtterance);
+          const silent = new SpeechSynthesisUtterance(' ');
+          silent.volume = 0.01;
+          window.speechSynthesis.speak(silent);
         } catch (_) {}
       }
 
@@ -716,25 +815,115 @@
         _phoneSpkUnlocked = true;
         const pill = document.getElementById('spk-pill');
         pill.className = 'spk-pill active';
-        document.getElementById('spk-label').textContent = '🔊 PHONE SPK';
+        document.getElementById('spk-label').textContent = '🔊 ULTRON AUDIO SYNC';
+        const mSpk = document.getElementById('m-spk');
+        if (mSpk) mSpk.textContent = 'DUAL ACTIVE';
         if (userAction) {
           playUltronChime();
-          toast('🔊 Phone Speaker Active!');
+          toast('🔊 Phone Speaker Active');
+          if (navigator.vibrate) navigator.vibrate(40);
         }
       }
     }
 
-    // Listen to all touch/click interactions to automatically unlock
-    ['click', 'touchend', 'pointerup', 'keydown'].forEach(evt => {
-      document.addEventListener(evt, () => unlockAudio(false), { passive: true, once: false });
+    // Listen to every touch/click to pre-warm audio silently
+    ['click', 'touchend', 'pointerdown', 'keydown'].forEach(evt => {
+      document.addEventListener(evt, () => unlockAudio(false), { passive: true });
     });
 
-    // Universal PCM Chunk Player (24,000 Hz Int16 → Device Native Float32)
+    // ── Primary Engine: EdgeTTS Server Streaming to Phone Loudspeaker ────────
+    function speakUltronResponse(text) {
+      if (!text) return;
+
+      const clean = text
+        .replace(/```[\s\S]*?```/g, '')
+        .replace(/`([^`]+)`/g, '$1')
+        .replace(/[*_~#>|]/g, '')
+        .replace(/^(?:ultron|jarvis|assistant|system)\s*:\s*/i, '')
+        .trim();
+      if (!clean) return;
+
+      // If live PCM chunks played within the last 1.4s, avoid duplicate speech
+      if (_hasStreamAudioPlayed && (Date.now() - _lastPcmChunkTime < 1400)) {
+        console.log('[Audio] PCM stream already sounded, skipping TTS.');
+        return;
+      }
+
+      unlockAudio(false);
+
+      const player = document.getElementById('remote-player');
+      const ttsUrl = `/api/tts?text=${encodeURIComponent(clean.slice(0, 500))}&token=${encodeURIComponent(_authToken)}`;
+
+      setSpeakingUi(true);
+
+      let fallbackTriggered = false;
+      const runFallback = () => {
+        if (fallbackTriggered) return;
+        fallbackTriggered = true;
+        setSpeakingUi(false);
+        speakTextFallback(clean);
+      };
+
+      player.src = ttsUrl;
+      player.onplay = () => {
+        setSpeakingUi(true);
+      };
+      player.onended = () => {
+        setSpeakingUi(false);
+      };
+      player.onerror = (err) => {
+        console.warn('[Audio] HTML5 TTS error, falling back to Web Speech:', err);
+        runFallback();
+      };
+
+      const p = player.play();
+      if (p !== undefined) {
+        p.catch(err => {
+          console.warn('[Audio] Autoplay blocked, falling back to Web Speech:', err);
+          runFallback();
+        });
+      }
+    }
+
+    // ── Fallback Engine: Web Speech API ──────────────────────────────────────
+    function speakTextFallback(text) {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+
+      const clean = text
+        .replace(/```[\s\S]*?```/g, '')
+        .replace(/`([^`]+)`/g, '$1')
+        .replace(/[*_~#>|]/g, '')
+        .replace(/^(?:ultron|jarvis|assistant|system)\s*:\s*/i, '')
+        .trim();
+      if (!clean) return;
+
+      const u = new SpeechSynthesisUtterance(clean);
+      u.rate = 1.05;
+      u.pitch = 0.88; // Deep Ultron robotic inflection
+
+      const voices = window.speechSynthesis.getVoices();
+      const v = voices.find(vo => vo.lang.startsWith('hi') || vo.lang.startsWith('en-IN') || vo.name.includes('David') || vo.name.includes('Male')) || voices[0];
+      if (v) u.voice = v;
+
+      u.onstart = () => {
+        setSpeakingUi(true);
+      };
+      u.onend = () => {
+        setSpeakingUi(false);
+      };
+      u.onerror = () => {
+        setSpeakingUi(false);
+      };
+      window.speechSynthesis.speak(u);
+    }
+
+    // ── Real-Time Raw PCM Streamer for Gemini Live ───────────────────────────
     function playPcmChunk(rawBase64, srcSampleRate = 24000) {
-      if (!_phoneSpkUnlocked) unlockAudio(false);
+      unlockAudio(false);
       const ctx = getAudioCtx();
       if (!ctx) return;
-      if (ctx.state === 'suspended') ctx.resume();
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
 
       try {
         const binStr = atob(rawBase64);
@@ -743,15 +932,16 @@
         for (let i = 0; i < binStr.length; i++) {
           bytes[i] = binStr.charCodeAt(i);
         }
-        const int16 = new Int16Array(bytes.buffer);
+        const int16 = new Int16Array(bytes.buffer, 0, len);
 
         // Compute amplitude for Avatar visualizer
         let sumAmp = 0;
         for (let i = 0; i < len; i++) sumAmp += Math.abs(int16[i]);
         _vocalLevel = Math.min(1.0, (sumAmp / len) / 32768.0 * 3.8);
         _lastVoiceTime = Date.now();
+        _lastPcmChunkTime = Date.now();
+        _hasStreamAudioPlayed = true;
 
-        // Resample safely to device's hardware sample rate (guarantees 0 errors on iOS/Android)
         const targetRate = ctx.sampleRate || 48000;
         const ratio = srcSampleRate / targetRate;
         const outLen = Math.round(len / ratio);
@@ -770,13 +960,12 @@
 
         const now = ctx.currentTime;
         if (_nextPlayTime < now) {
-          _nextPlayTime = now + 0.035; // 35ms anti-jitter safety buffer
+          _nextPlayTime = now + 0.035;
         } else if (_nextPlayTime - now > 1.2) {
-          _nextPlayTime = now + 0.035; // prevent network backlog delay
+          _nextPlayTime = now + 0.035;
         }
         srcNode.start(_nextPlayTime);
         _nextPlayTime += buf.duration;
-        _hasStreamAudioPlayed = true;
 
         const pill = document.getElementById('spk-pill');
         pill.classList.add('speaking');
@@ -787,38 +976,6 @@
       }
     }
 
-    // Web Speech Synthesis (Fail-Safe Dual Voice Engine)
-    function speakTextFallback(text) {
-      if (!window.speechSynthesis) return;
-      window.speechSynthesis.cancel();
-
-      const clean = text
-        .replace(/```[\s\S]*?```/g, '')
-        .replace(/`([^`]+)`/g, '$1')
-        .replace(/[*_#]/g, '')
-        .trim();
-      if (!clean) return;
-
-      const u = new SpeechSynthesisUtterance(clean);
-      u.rate = 1.05;
-      u.pitch = 0.88; // Deep Ultron robotic inflection
-
-      const voices = window.speechSynthesis.getVoices();
-      const v = voices.find(vo => vo.lang.startsWith('hi') || vo.lang.startsWith('en-IN') || vo.name.includes('David') || vo.name.includes('Male')) || voices[0];
-      if (v) u.voice = v;
-
-      u.onstart = () => {
-        document.getElementById('spk-pill').classList.add('speaking');
-        _vocalLevel = 0.75;
-        _lastVoiceTime = Date.now();
-      };
-      u.onend = () => {
-        document.getElementById('spk-pill').classList.remove('speaking');
-        _vocalLevel = 0;
-      };
-      window.speechSynthesis.speak(u);
-    }
-
     // ── WebSocket Uplink ──────────────────────────────────────────────────────
     const feed = document.getElementById('feed');
     const pill = document.getElementById('pill');
@@ -827,46 +984,45 @@
 
     const _wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
     const _wsUrl = `${_wsProto}://${location.host}/ws?token=${encodeURIComponent(_authToken)}`;
-    const ws = new WebSocket(_wsUrl);
+    let ws = null;
 
-    ws.onopen = () => {
-      sys('NEURAL UPLINK SYNCHRONIZED — AES-256 ACTIVE');
-      toast('Uplink Synchronized');
-      setStatus('active');
-    };
-    ws.onclose = () => {
-      sys('UPLINK SEVERED — REFRESH TO RECONNECT');
-      setStatus('inactive');
-    };
-    ws.onerror = () => sys('UPLINK NETWORK ERROR');
-    ws.onmessage = (e) => {
-      const m = JSON.parse(e.data);
-      if (m.type === 'audio_stream') {
-        playPcmChunk(m.data, m.sr || 24000);
-      } else if (m.type === 'log') {
-        append(m.speaker, m.text);
-        if (m.speaker === 'ultron' || m.speaker === 'jarvis') {
-          // If live PCM stream hasn't arrived recently, use Speech Synthesis fallback
-          setTimeout(() => {
-            if (!_hasStreamAudioPlayed || (Date.now() - _lastVoiceTime > 1200)) {
-              speakTextFallback(m.text);
-            }
-            _hasStreamAudioPlayed = false;
-          }, 280);
+    function connectWs() {
+      ws = new WebSocket(_wsUrl);
+      ws.onopen = () => {
+        sys('NEURAL UPLINK SYNCHRONIZED — AES-256 ACTIVE');
+        toast('Uplink Synchronized');
+        setStatus('active');
+      };
+      ws.onclose = () => {
+        sys('UPLINK SEVERED — RECONNECTING…');
+        setStatus('inactive');
+        setTimeout(connectWs, 2000);
+      };
+      ws.onerror = () => sys('UPLINK NETWORK ERROR');
+      ws.onmessage = (e) => {
+        const m = JSON.parse(e.data);
+        if (m.type === 'audio_stream') {
+          playPcmChunk(m.data, m.sr || 24000);
+        } else if (m.type === 'log') {
+          append(m.speaker, m.text);
+          if (m.speaker === 'ultron' || m.speaker === 'jarvis') {
+            speakUltronResponse(m.text);
+          }
+        } else if (m.type === 'speak') {
+          if (m.text) speakUltronResponse(m.text);
+        } else if (m.type === 'status') {
+          setStatus(m.state);
+        } else if (m.type === 'wake') {
+          sys('WAKE EVENT DETECTED // INITIALIZING…');
+          _vocalLevel = 0.8;
+        } else if (m.type === 'sys') {
+          sys(m.text);
+        } else if (m.type === 'file_received') {
+          _onFileReceived(m);
         }
-      } else if (m.type === 'speak') {
-        if (m.text) speakTextFallback(m.text);
-      } else if (m.type === 'status') {
-        setStatus(m.state);
-      } else if (m.type === 'wake') {
-        sys('WAKE EVENT DETECTED // INITIALIZING…');
-        _vocalLevel = 0.8;
-      } else if (m.type === 'sys') {
-        sys(m.text);
-      } else if (m.type === 'file_received') {
-        _onFileReceived(m);
-      }
-    };
+      };
+    }
+    connectWs();
 
     function setStatus(s) {
       const mState = document.getElementById('m-state');
@@ -1064,6 +1220,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
+      if (navigator.vibrate) navigator.vibrate(20);
     }
 
     function doWake() {
@@ -1295,7 +1452,7 @@
       // ── 2. Backlight Crimson Atmosphere ───────────────────────────────────
       const glowR = radius * 1.35;
       const radGlow = ctx.createRadialGradient(cx, cy, 10, cx, cy, glowR);
-      const intensity = 0.16 + _vocalLevel * 0.4;
+      const intensity = 0.16 + _vocalLevel * 0.45;
       radGlow.addColorStop(0, `rgba(255, 31, 67, ${intensity})`);
       radGlow.addColorStop(0.6, 'rgba(255, 31, 67, 0.05)');
       radGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
@@ -1315,9 +1472,8 @@
 
       if (_imgLoaded) {
         ctx.save();
-        // Drop shadow for 3D depth
-        ctx.shadowColor = 'rgba(255, 31, 67, 0.5)';
-        ctx.shadowBlur = 14 + _vocalLevel * 20;
+        ctx.shadowColor = 'rgba(255, 31, 67, 0.55)';
+        ctx.shadowBlur = 14 + _vocalLevel * 22;
         ctx.drawImage(avatarImg, hx, hy, headW, headH);
         ctx.restore();
       }
