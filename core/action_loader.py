@@ -95,6 +95,16 @@ class ActionRegistry:
     def names(self) -> set[str]:
         return set(self._actions.keys())
 
+    def register_action(self, rec: ActionRecord) -> bool:
+        """Dynamically hot-load a validated action record at runtime."""
+        if not rec.valid:
+            self._logger(f"Action hot-load rejected: {rec.name} — {rec.error}")
+            return False
+        self._actions[rec.name] = rec
+        self._all_records.append(rec)
+        self._logger(f"Action hot-loaded: {rec.name} ({rec.file})")
+        return True
+
     # -- called by main.py from _execute_tool --
     def run(self, name: str, parameters: dict, ctx: dict | None = None) -> str:
         rec = self._actions.get(name)

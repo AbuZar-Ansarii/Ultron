@@ -352,12 +352,58 @@ class Pyttsx3TTSEngine:
             engine.setProperty("rate", self.rate)
         except Exception:
             pass
-        engine.say(clean)
-        engine.runAndWait()
+
+        # Try offline DSP warp path via temporary audio render
+        import tempfile
+        import time as _t_mod
+        from pathlib import Path
+        temp_wav = Path(tempfile.gettempdir()) / f"ultron_dsp_{os.getpid()}_{_t_mod.time_ns()}.wav"
+        rendered = False
         try:
-            engine.stop()
+            engine.save_to_file(clean, str(temp_wav))
+            engine.runAndWait()
+            try:
+                engine.stop()
+            except Exception:
+                pass
+
+            if temp_wav.exists() and temp_wav.stat().st_size > 44:
+                import miniaudio
+                decoded = miniaudio.decode_file(
+                    str(temp_wav),
+                    output_format=miniaudio.SampleFormat.FLOAT32,
+                    nchannels=1,
+                )
+                samples = np.array(decoded.samples, dtype=np.float32)
+
+                # Apply MCU Ultron robotic voice warp
+                try:
+                    from memory.config_manager import get_ultron_voice_warp, get_voice_warp_intensity
+                    if get_ultron_voice_warp():
+                        intensity = get_voice_warp_intensity()
+                        samples = apply_ultron_voice_warp(samples, decoded.sample_rate, intensity=intensity)
+                except Exception:
+                    pass
+
+                _play_np(samples, decoded.sample_rate)
+                rendered = True
         except Exception:
-            pass
+            rendered = False
+        finally:
+            try:
+                if temp_wav.exists():
+                    temp_wav.unlink(missing_ok=True)
+            except Exception:
+                pass
+
+        if not rendered:
+            # Direct fallback path
+            try:
+                engine.say(clean)
+                engine.runAndWait()
+                engine.stop()
+            except Exception:
+                pass
 
 
 # ── Dynamic Language-Aware Neural Voice Routing ─────────────────────────────

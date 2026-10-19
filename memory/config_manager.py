@@ -355,6 +355,21 @@ def save_ultron_voice_warp(enabled: bool) -> None:
     _save_flag("ultron_voice_warp", bool(enabled))
 
 
+def get_voice_warp_intensity() -> float:
+    """Return the intensity of Ultron's James Spader voice warp DSP (0.0 to 1.0, default 0.55)."""
+    val = load_api_keys().get("voice_warp_intensity", 0.55)
+    try:
+        return max(0.0, min(1.0, float(val)))
+    except Exception:
+        return 0.55
+
+
+def save_voice_warp_intensity(intensity: float) -> None:
+    """Persist voice warp DSP intensity."""
+    clamped = max(0.0, min(1.0, float(intensity)))
+    _save_flag("voice_warp_intensity", clamped)
+
+
 def get_wake_word_enabled() -> bool:
     """Whether local wake-word gating is on (assistant sleeps until 'Hey Jarvis')."""
     return load_api_keys().get("wake_word_enabled", False)

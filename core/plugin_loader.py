@@ -83,6 +83,16 @@ class PluginRegistry:
         rec = self._plugins.get(name)
         return rec.scheduling if rec else None
 
+    def register_plugin(self, rec: PluginRecord) -> bool:
+        """Dynamically hot-load a validated plugin record at runtime."""
+        if not rec.valid:
+            self._logger(f"Plugin hot-load rejected: {rec.name} — {rec.error}")
+            return False
+        self._plugins[rec.name] = rec
+        self._all_records.append(rec)
+        self._logger(f"Plugin hot-loaded: {rec.name} ({rec.file})")
+        return True
+
     # -- called by main.py from _execute_tool's else branch --
     def run(self, name: str, parameters: dict, player=None, session_memory=None) -> str:
         rec = self._plugins.get(name)

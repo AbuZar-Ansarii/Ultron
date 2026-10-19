@@ -185,7 +185,19 @@ class TaskAnimator:
                 return "SEARCH"
             if any(k in combo for k in ("code", "coding", "dev", "developer")):
                 return "CODE"
+        # God-Tier Superhuman Capabilities routing
+        if any(k in clean for k in ("self_evolution", "prometheus", "synthesize")):
+            return "CODE"
+        if any(k in clean for k in ("chronos", "predictive", "overdrive", "chronos_predictive")):
+            return "MATRIX"
+        if any(k in clean for k in ("gesture", "minority", "spatial", "touchless")):
+            return "GHOST"
+        if any(k in clean for k in ("cerebro", "cerebro_memory", "knowledge_graph")):
+            return "COGNITION"
+        if any(k in clean for k in ("genesis", "iot_overlord", "smart_room")):
             return "WORKSPACE"
+        if any(k in clean for k in ("voice_matrix", "deep_vocal", "spader", "vocal_warp")):
+            return "SONIC"
 
         if any(k in clean for k in ("cognition", "think", "neural", "reason", "synthes", "plan", "analyze", "directive", "intent")):
             return "COGNITION"
@@ -259,6 +271,19 @@ class TaskAnimator:
             if any(k in combo for k in ("code", "coding", "dev")):
                 return "WORKSPACE MATRIX // CODING SANCTUARY ENGAGED"
             return "WORKSPACE MATRIX // ORCHESTRATING ENVIRONMENT"
+
+        if any(k in clean for k in ("self_evolution", "prometheus", "synthesize")):
+            return "PROJECT PROMETHEUS // AUTONOMOUS EVOLUTION & CODE SYNTHESIS"
+        if any(k in clean for k in ("chronos", "predictive", "overdrive", "chronos_predictive")):
+            return "PROJECT CHRONOS // PREDICTIVE OVERDRIVE & CONTEXT ENGINE"
+        if any(k in clean for k in ("gesture", "minority", "spatial")):
+            return "PROJECT MINORITY // TOUCHLESS SPATIAL GESTURE SENSOR"
+        if any(k in clean for k in ("cerebro", "cerebro_memory", "knowledge_graph")):
+            return "PROJECT CEREBRO // INFINITE NEURAL MEMORY VECTOR GRAPH"
+        if any(k in clean for k in ("genesis", "iot_overlord")):
+            return "PROJECT GENESIS // FULL IOT SMART ROOM DOMINION"
+        if any(k in clean for k in ("voice_matrix", "deep_vocal", "vocal_warp", "spader")):
+            return "PROJECT DEEP-VOCAL // JAMES SPADER ROBOTIC DSP ENGINE"
 
         labels = {
             "COGNITION": "NEURAL COGNITION // QUANTUM SYNAPSE OVERCLOCK",

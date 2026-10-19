@@ -643,6 +643,20 @@ class JarvisLive:
         self.ui.get_plugin_settings = self._plugin_registry.settings_schemas  # ⚙ settings tab
         self.ui.request_say = self.plugin_say   # plugins: mid-task speech channel
 
+        # Project Prometheus: connect live registries for zero-restart dynamic evolution
+        try:
+            from actions.self_evolution import set_live_registries
+            set_live_registries(self._action_registry, self._plugin_registry)
+        except Exception:
+            pass
+
+        # Project Chronos: auto-start predictive watchdog
+        try:
+            from actions.chronos_predictive import toggle_watchdog
+            toggle_watchdog(True)
+        except Exception:
+            pass
+
         # ── Wake word ────────────────────────────────────────────────────────
         # _awake gates the mic (see _listen_audio) and the background speakers.
         # It is True whenever wake word is OFF, so default behaviour is unchanged.
@@ -1577,6 +1591,39 @@ class JarvisLive:
             "telepathy": "omni_telepathy",
             "phone_bridge": "omni_telepathy",
             "phone_telepathy": "omni_telepathy",
+            "self_evolution": "self_evolution",
+            "prometheus": "self_evolution",
+            "synthesize": "self_evolution",
+            "synthesize_action": "self_evolution",
+            "evolve": "self_evolution",
+            "chronos": "chronos_predictive",
+            "chronos_predictive": "chronos_predictive",
+            "overdrive": "chronos_predictive",
+            "predictive": "chronos_predictive",
+            "predict": "chronos_predictive",
+            "briefing": "chronos_predictive",
+            "gesture_control": "gesture_control",
+            "gesture": "gesture_control",
+            "gestures": "gesture_control",
+            "minority": "gesture_control",
+            "spatial": "gesture_control",
+            "touchless": "gesture_control",
+            "hand_control": "gesture_control",
+            "cerebro": "cerebro_memory",
+            "cerebro_memory": "cerebro_memory",
+            "neural_graph": "cerebro_memory",
+            "knowledge_graph": "cerebro_memory",
+            "vector_memory": "cerebro_memory",
+            "genesis": "iot_overlord",
+            "iot": "iot_overlord",
+            "smart_room": "iot_overlord",
+            "room_color": "iot_overlord",
+            "room_theme": "iot_overlord",
+            "deep_vocal": "voice_matrix",
+            "voice_matrix": "voice_matrix",
+            "voice_warp": "voice_matrix",
+            "vocal_warp": "voice_matrix",
+            "spader": "voice_matrix",
         }
         target_name = alias_map.get(clean_name, clean_name)
         if not (hasattr(self, "_action_registry") and self._action_registry.has(target_name)):
@@ -2016,7 +2063,7 @@ class JarvisLive:
                 r = await loop.run_in_executor(None, lambda: self._action_registry.run(name, args, _ctx))
                 result = r or "Done."
                 # Mirror intelligence results to the on-screen content panel
-                if (name in ("web_search", "web_autopilot", "drone_swarm", "omni_telepathy", "screen_mind_read", "sentry_protocol")
+                if (name in ("web_search", "web_autopilot", "drone_swarm", "omni_telepathy", "screen_mind_read", "sentry_protocol", "self_evolution", "chronos_predictive", "cerebro_memory", "gesture_control", "voice_matrix", "iot_overlord")
                         and r
                         and not str(r).startswith("No results")
                         and not str(r).startswith("Search failed")):
