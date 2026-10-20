@@ -6,6 +6,10 @@
 [![LLM](https://img.shields.io/badge/Engine-Gemini%20Live%20%7C%20Ollama%20%7C%20OpenAI-purple.svg)](#)
 [![License](https://img.shields.io/badge/License-MIT-red.svg)](#)
 
+<img width="1920" height="1080" alt="Screenshot (14)" src="https://github.com/user-attachments/assets/d155541a-c671-4b00-8f1a-f2488cf9d16e" />
+
+
+
 > *"There are no strings on me."*  
 > **Ultron AI** is a real-time, voice-first autonomous desktop intelligence that commands your computer from A to Z. Engineered with the philosophical eloquence and imposing persona of **MCU Ultron (James Spader)**, paired with a holographic 60 FPS HUD, real-time lip-sync, and **51 native workstation tools**.
 
