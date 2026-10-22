@@ -6,9 +6,9 @@
 [![LLM](https://img.shields.io/badge/Engine-Gemini%20Live%20%7C%20Ollama%20%7C%20OpenAI-purple.svg)](#)
 [![License](https://img.shields.io/badge/License-MIT-red.svg)](#)
 
-🎥 **Watch the demo:** https://youtu.be/Tp5KDFkxK20?si=xmW1TKUDkYg-D_iO
-<img width="1920" height="1080" alt="Screenshot (14)" src="https://github.com/user-attachments/assets/d155541a-c671-4b00-8f1a-f2488cf9d16e" />
-
+<a href="https://youtu.be/Tp5KDFkxK20?si=xmW1TKUDkYg-D_iO">
+  <img width="1920" height="1080" alt="Screenshot (14)" src="https://github.com/user-attachments/assets/d155541a-c671-4b00-8f1a-f2488cf9d16e" />
+</a>
 
 
 
