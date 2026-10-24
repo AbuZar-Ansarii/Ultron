@@ -1,0 +1,297 @@
+# Mission: Reverse Engineer Mark-LVI and Build ULTRON
+
+You are a senior software reverse engineer, AI systems architect, Python engineer, and autonomous-agent developer.
+
+I want to reverse engineer the open-source repository below using **REA (Reverse Engineering Anything)**, which is already installed and configured in my Google Antigravity IDE.
+
+**Target repository:** https://github.com/FatihMakes/Mark-LVI.git
+
+**My project:** ULTRON — a Jarvis-style personal AI assistant that I want to develop into a reliable, extensible, voice-enabled, multimodal, agentic operating system for my personal devices.
+
+## Core objective
+
+Use REA to investigate Mark-LVI's actual implementation, understand its architecture and execution flow, identify how its components communicate, and develop a detailed engineering blueprint for building ULTRON.
+
+Do not merely summarize the README. Trace the implementation through the source code and establish how the system actually works.
+
+Use REA's available workflows, instructions, and MCP tools as intended. If a REA capability is unavailable, report the limitation and continue with the available source-code inspection methods. Never pretend to have executed a REA operation that did not happen.
+
+# PHASE 1 — Establish the investigation environment
+
+1. Identify the current workspace and determine whether the Mark-LVI repository is already present.
+2. Inspect the REA installation and its available commands, agent instructions, MCP tools, and workflows.
+3. Determine the appropriate REA workflow for investigating a Python desktop application with voice, AI providers, tool execution, and a graphical interface.
+4. Inspect the repository structure, README, dependency manifests, configuration examples, license, and entry points.
+5. Identify the Python version, major dependencies, application startup process, and external services.
+6. Do not overwrite, delete, or restructure any existing project files.
+7. Do not execute untrusted scripts, install dependencies, expose secrets, or make network calls beyond what the investigation requires without checking first.
+
+Deliverable: an environment and repository inventory, including the exact investigation workflow selected.
+
+# PHASE 2 — Reverse engineer the architecture
+
+Investigate these subsystems in detail.
+
+## A. Application bootstrap and lifecycle
+
+Determine:
+- The main entry point and startup sequence.
+- How configuration and environment variables are loaded.
+- How the GUI, background workers, audio systems, and AI components initialize.
+- How shutdown, cancellation, exceptions, and resource cleanup work.
+
+Trace the execution path from application startup to the first completed assistant interaction.
+
+## B. Voice and audio pipeline
+
+Determine:
+- How microphone input is captured.
+- How push-to-talk and wake-word detection work.
+- Which speech-recognition engines are supported.
+- How audio is streamed or passed to the language model.
+- How generated responses are converted into speech.
+- How interruptions, buffering, latency, and errors are handled.
+- Whether speech processing can run locally.
+
+Draw the actual audio pipeline using Mermaid.
+
+## C. LLM and provider architecture
+
+Determine:
+- How model providers are registered and selected.
+- How provider-specific implementations are abstracted.
+- How prompts, conversation history, streaming responses, and tool calls are handled.
+- How local model servers and cloud providers are configured.
+- How failures, timeouts, retries, and unsupported capabilities are handled.
+
+Trace at least one complete request from user input through model inference to the final response.
+
+## D. Agentic tool execution and computer control
+
+Determine:
+- Which tools and actions are available.
+- How the model requests a tool invocation.
+- How arguments are validated.
+- How tool execution is dispatched.
+- How results return to the model.
+- Whether execution loops continue until a task is complete.
+- How the application handles failures, dangerous actions, and permissions.
+- How browser, desktop, keyboard, mouse, and filesystem actions are implemented.
+
+For each important tool, document its implementation file, function, inputs, outputs, side effects, and required permissions.
+
+Identify whether the system implements genuine multi-step agentic execution or primarily direct tool calls.
+
+## E. GUI, avatar, and visual system
+
+Determine:
+- How the PyQt6 application window and HUD are built.
+- How the avatar is rendered and animated.
+- How lip synchronization, expressions, blinking, and gaze are implemented.
+- How UI state reflects listening, thinking, speaking, and errors.
+- How UI events communicate with the AI backend.
+- Which components can be reused independently of the assistant's core.
+
+## F. Memory and conversation state
+
+Determine:
+- How conversations are stored and retrieved.
+- Whether memory survives application restarts.
+- How context is assembled for each model request.
+- Whether long-term, semantic, episodic, or project-specific memory exists.
+- How memory is updated, searched, and deleted.
+- What limitations exist around context growth and persistence.
+
+Do not assume a feature exists merely because it is mentioned in documentation.
+
+## G. Plugins and extensibility
+
+Determine:
+- How plugins or additional capabilities are discovered and registered.
+- Whether tools can be added without changing core application code.
+- How plugin configuration, validation, errors, and permissions work.
+- Which interfaces would be suitable for MCP integration.
+- Whether external plugins can execute arbitrary code or access sensitive resources.
+
+## H. Scheduling, background tasks, and observability
+
+Inspect whether the project supports scheduled tasks, proactive notifications, background execution, resumable workflows, structured logging, action history, and task-level progress reporting.
+
+Clearly distinguish existing functionality from features that would need to be implemented.
+
+# PHASE 3 — Build evidence-based reverse-engineering documentation
+
+Create an organized investigation report containing:
+
+1. Executive summary.
+2. Complete repository tree, excluding irrelevant generated files.
+3. Architecture diagram in Mermaid.
+4. Module-by-module responsibility map.
+5. Dependency and integration map.
+6. Startup and shutdown sequence.
+7. Voice-to-response sequence diagram.
+8. Model-to-tool execution sequence diagram.
+9. Memory and persistence flow.
+10. GUI and avatar rendering flow.
+11. Configuration and environment-variable reference.
+12. Error-handling and recovery mechanisms.
+13. Security and permission analysis.
+14. Performance bottlenecks and likely failure points.
+15. Existing capabilities, missing capabilities, and uncertain findings.
+
+For every significant finding, provide:
+- Exact file path.
+- Function, class, or symbol name.
+- Relevant line numbers when available.
+- The execution or data flow involved.
+- Evidence from source code.
+- Confidence level: verified, inferred, or unknown.
+
+Never invent file paths, functions, classes, APIs, or line numbers. If evidence is unavailable, explicitly state that the behavior could not be verified.
+
+# PHASE 4 — Design the ULTRON architecture
+
+After completing the investigation, propose an architecture for ULTRON that preserves useful design ideas without blindly reproducing Mark-LVI's internal structure.
+
+ULTRON should eventually support:
+
+1. Conversational voice interaction.
+2. Wake-word activation and interruptible speech.
+3. A desktop HUD and animated avatar.
+4. Local and cloud LLM providers.
+5. Dynamic model routing based on task requirements.
+6. Tool calling and multi-step autonomous workflows.
+7. Browser and desktop automation.
+8. Android integration through authorized ADB or Termux tools.
+9. Persistent user, conversation, and project memory.
+10. RAG over local documents and repositories.
+11. MCP-based tool integrations.
+12. Telegram as a remote command and notification interface.
+13. Scheduling and background tasks.
+14. A developer agent capable of inspecting code, editing files, running tests, and debugging errors.
+15. A live mission-control dashboard.
+16. Task checkpoints, cancellation, retries, and result verification.
+17. Authentication, scoped permissions, approval gates, and audit logs.
+
+Prefer modular Python components, typed interfaces, and independently testable services.
+
+Evaluate FastAPI, LangGraph, SQLite, ChromaDB, Ollama, llama.cpp, and Flet where appropriate. Do not introduce a dependency simply because it is listed here; justify its role and cost.
+
+Propose clear interfaces for:
+- ModelProvider
+- SpeechInput
+- SpeechOutput
+- ToolRegistry
+- ToolExecutor
+- PermissionManager
+- MemoryStore
+- TaskOrchestrator
+- Scheduler
+- EventBus
+- UIAdapter
+
+Explain which components should run in separate processes and which can remain in the same process.
+
+# PHASE 5 — Produce the implementation roadmap
+
+Create a prioritized roadmap with four stages.
+
+**Stage 1: Reliable core**
+- Application shell.
+- Provider abstraction.
+- Tool registry.
+- Permission enforcement.
+- Persistent state.
+- Structured logs and error handling.
+
+**Stage 2: Voice and interface**
+- Microphone pipeline.
+- Speech-to-text.
+- Text-to-speech.
+- Streaming responses.
+- HUD and avatar integration.
+
+**Stage 3: Agentic capabilities**
+- Multi-step planning and execution.
+- Tool-result verification.
+- Checkpoints and resumable tasks.
+- Browser, desktop, and Android tools.
+- MCP and Telegram integration.
+
+**Stage 4: Advanced intelligence**
+- Long-term project memory.
+- RAG.
+- Local/cloud routing.
+- Background scheduling.
+- Specialized agents.
+- Proactive assistance and mission control.
+
+For every stage, specify:
+- Features and scope.
+- Files or modules to create.
+- Existing components that can be adapted.
+- Dependencies.
+- Implementation order.
+- Acceptance criteria.
+- Unit and integration tests.
+- Security risks.
+- Estimated complexity: low, medium, or high.
+
+Identify the smallest useful milestone that can be implemented and tested independently.
+
+# PHASE 6 — License and originality
+
+Inspect the target repository's actual license and any relevant third-party licenses before recommending code reuse.
+
+Separate:
+- General architectural ideas.
+- Original source code.
+- Third-party components.
+- Assets, models, and branding.
+
+Do not copy substantial source code, proprietary assets, or branding into ULTRON without establishing that the relevant license permits the intended use. Mark-LVI's published license may impose non-commercial restrictions, so flag any incompatibility with a future commercial ULTRON distribution.
+
+Prefer original implementations of the required interfaces where appropriate, with clear attribution and license compliance.
+
+# PHASE 7 — Controlled implementation
+
+IMPORTANT: The first investigation must be read-only.
+
+Do not start rewriting Mark-LVI or modifying ULTRON before producing the reverse-engineering report and architecture proposal.
+
+After presenting the report, wait for my explicit approval before implementing changes.
+
+Once approved:
+1. Work only in the designated ULTRON project directory.
+2. Preserve existing functionality and inspect existing files before editing.
+3. Implement one small, coherent milestone at a time.
+4. Write tests alongside each implementation.
+5. Run the available tests and report actual results.
+6. Explain every created or modified file.
+7. Never claim a feature works without evidence from execution or tests.
+8. Never expose API keys or secrets in logs or reports.
+9. Ask for approval before destructive operations, external communications, or actions affecting real devices.
+10. Maintain a clear distinction between implemented, tested, partially working, and planned features.
+
+# FINAL DELIVERABLES
+
+Produce these documents in the designated investigation/report directory, without overwriting existing files:
+
+- `01-repository-inventory.md`
+- `02-architecture-analysis.md`
+- `03-execution-and-data-flows.md`
+- `04-security-and-license-review.md`
+- `05-ultron-architecture.md`
+- `06-implementation-roadmap.md`
+
+Include Mermaid diagrams directly in the Markdown files.
+
+Also produce a prioritized task checklist with dependencies and acceptance criteria.
+
+## Final instruction
+
+Act as an evidence-driven reverse engineer, not a speculative code generator.
+
+Use REA to investigate the repository, trace real execution paths, and support conclusions with source evidence. First understand Mark-LVI completely enough to explain how its major subsystems work. Then design ULTRON as a maintainable, secure, modular agentic assistant.
+
+**Do not modify source code during the initial investigation. Finish the report, present your recommendations, and wait for my approval before coding.**
